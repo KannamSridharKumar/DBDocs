@@ -286,7 +286,9 @@ def generate(
         from src.llm.client import LLMClient
 
         output_dir.mkdir(parents=True, exist_ok=True)
-        cache_path = output_dir / ".llm_cache.json"
+        data_dir = output_dir / "data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+        cache_path = data_dir / ".llm_cache.json"
         llm_kwargs: dict = {}
         if cfg.llm_provider == "openai":
             llm_kwargs["api_key"] = cfg.openai_api_key
@@ -307,7 +309,7 @@ def generate(
                 cache_path=cache_path,
                 no_cache=no_cache,
                 call_delay=cfg.llm_call_delay,
-                log_path=output_dir / "llm_calls.log",
+                log_path=data_dir / "llm_calls.log",
                 **llm_kwargs,
             )
             with Progress(
@@ -351,6 +353,8 @@ def generate(
     # ── Generate outputs ───────────────────────────────────────────────────
     console.print(f"\n[bold]Generating outputs ({', '.join(sorted(export_formats))})…[/bold]")
     output_dir.mkdir(parents=True, exist_ok=True)
+    data_dir = output_dir / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
     generated_at = datetime.now(timezone.utc).isoformat()
 
     from src.generators import data_dictionary, data_profiling, erd, index_page
@@ -410,8 +414,8 @@ def generate(
             dd_data = dd_build(tables_info, db_name, generated_at)
             dp_data = dp_build(profiles, db_name, generated_at) if profiles else {"tables": []}
             erd_data = erd_build(tables_info, db_name, generated_at)
-            json_export(output_dir, dd_data, dp_data, erd_data)
-            console.print(f"  [green]✓[/green] JSON exports     → {output_dir}/schema.json, profiling.json, erd.json, summary.json")
+            json_export(data_dir, dd_data, dp_data, erd_data)
+            console.print(f"  [green]✓[/green] JSON exports     → {data_dir}/")
         except Exception as exc:
             console.print(f"  [yellow]⚠ JSON export failed:[/yellow] {exc}")
 
@@ -424,8 +428,8 @@ def generate(
                 from src.generators.data_profiling import build_data as dp_build2
                 dd_data = dd_build2(tables_info, db_name, generated_at)
                 dp_data = dp_build2(profiles, db_name, generated_at) if profiles else {"tables": []}
-            csv_export(output_dir, dd_data, dp_data)
-            console.print(f"  [green]✓[/green] CSV exports      → {output_dir}/tables.csv, columns.csv, …")
+            csv_export(data_dir, dd_data, dp_data)
+            console.print(f"  [green]✓[/green] CSV exports      → {data_dir}/")
         except Exception as exc:
             console.print(f"  [yellow]⚠ CSV export failed:[/yellow] {exc}")
 
