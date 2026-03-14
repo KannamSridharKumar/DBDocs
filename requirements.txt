@@ -1,0 +1,18 @@
+sqlalchemy>=2.0.0
+python-dotenv>=1.0.0
+pandas>=2.0.0
+numpy>=1.24.0
+jinja2>=3.1.0
+typer[all]>=0.9.0
+rich>=13.0.0
+requests>=2.28.0
+
+# LLM providers (install what you need)
+openai>=1.0.0
+anthropic>=0.25.0
+
+# Database drivers (install what you need)
+psycopg2-binary>=2.9.0    # PostgreSQL
+pymysql>=1.1.0             # MySQL / MariaDB
+pyodbc>=4.0.0              # MS SQL Server
+# cx_Oracle>=8.3.0         # Oracle (requires Oracle client libs)

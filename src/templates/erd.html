@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ERD – {{ data.db_name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<!-- Cytoscape core + dagre layout + HTML label plugin -->
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-node-html-label@1.2.2/dist/cytoscape-node-html-label.js"></script>
+<style>
+/* ── Reset & base ────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; }
+body { background: #060b18; color: #e5e7eb; }
+body.light { background: #eef0f5; color: #1f2937; }
+
+/* ── Canvas ──────────────────────────────────────────────────────────── */
+#cy { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+
+/* ── Beautiful card nodes ────────────────────────────────────────────── */
+.cy-card {
+  font-family: 'Inter', sans-serif;
+  border-radius: 10px;
+  overflow: hidden;
+  width: 210px;
+  background: #0d1525;
+  border: 1.5px solid var(--accent, #4f46e5);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04),
+    0 8px 32px rgba(0,0,0,0.6),
+    0 0 24px rgba(0,0,0,0.3);
+  transition: box-shadow 0.2s;
+  cursor: pointer;
+  user-select: none;
+}
+body.light .cy-card {
+  background: #ffffff;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.12), 0 0 0 1.5px var(--accent, #4f46e5);
+  border: none;
+}
+.cy-header {
+  padding: 9px 11px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent, #4f46e5) 28%, transparent),
+    color-mix(in srgb, var(--accent, #4f46e5) 10%, transparent)
+  );
+  border-bottom: 1px solid color-mix(in srgb, var(--accent, #4f46e5) 35%, transparent);
+}
+body.light .cy-header {
+  border-bottom: 1px solid color-mix(in srgb, var(--accent, #4f46e5) 20%, transparent);
+}
+.cy-title {
+  font-weight: 700;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #f1f5f9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+body.light .cy-title { color: #0f172a; }
+.cy-type-badge {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--accent, #4f46e5);
+  background: color-mix(in srgb, var(--accent, #4f46e5) 18%, transparent);
+  padding: 2px 6px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.cy-body { padding: 2px 0; }
+
+/* Key columns */
+.cy-col {
+  display: flex;
+  align-items: center;
+  padding: 4px 11px;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+body.light .cy-col { border-bottom-color: rgba(0,0,0,0.05); }
+.cy-col-icon { font-size: 10px; flex-shrink: 0; width: 13px; text-align: center; line-height: 1; }
+.cy-col-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: #cbd5e1;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.light .cy-col-name { color: #334155; }
+.cy-col-type {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #60a5fa;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+body.light .cy-col-type { color: #2563eb; }
+/* PK col: golden name */
+.cy-col.pk .cy-col-name { color: #fcd34d; font-weight: 500; }
+body.light .cy-col.pk .cy-col-name { color: #b45309; }
+/* FK col: indigo name */
+.cy-col.fk .cy-col-name { color: #a5b4fc; }
+body.light .cy-col.fk .cy-col-name { color: #4338ca; }
+
+/* Divider between PK and FK sections */
+.cy-section-divider {
+  height: 1px;
+  margin: 2px 0;
+  background: rgba(255,255,255,0.06);
+}
+body.light .cy-section-divider { background: rgba(0,0,0,0.06); }
+
+.cy-no-keys {
+  padding: 7px 11px;
+  font-size: 10px;
+  color: #4b5563;
+  font-style: italic;
+  text-align: center;
+}
+.cy-extra {
+  padding: 3px 11px 4px;
+  font-size: 9px;
+  color: #374151;
+  letter-spacing: 0.02em;
+}
+body.light .cy-extra { color: #9ca3af; }
+.cy-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 11px;
+  font-size: 9px;
+  color: #4b5563;
+  background: rgba(0,0,0,0.25);
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+body.light .cy-footer {
+  background: rgba(0,0,0,0.03);
+  border-top-color: rgba(0,0,0,0.06);
+  color: #9ca3af;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+#sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 248px; z-index: 20;
+  display: flex; flex-direction: column;
+  border-right: 1px solid #1a2235;
+  transition: transform 0.22s ease;
+  background: #080e1c;
+}
+body.light #sidebar { background: #ffffff; border-color: #e5e7eb; }
+
+#sidebarToggle {
+  position: fixed; left: 248px; top: 50%; transform: translateY(-50%);
+  z-index: 21; border: none; border-radius: 0 7px 7px 0;
+  padding: 10px 5px; cursor: pointer; font-size: 11px;
+  background: #1f2937; color: #9ca3af;
+  transition: left 0.22s ease;
+}
+body.light #sidebarToggle { background: #e5e7eb; color: #374151; }
+
+/* ── Toolbar ─────────────────────────────────────────────────────────── */
+#toolbar {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 20; display: flex; gap: 6px;
+  border-radius: 14px; padding: 8px 14px;
+  background: #0b1122; border: 1px solid #1a2a44;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+}
+body.light #toolbar {
+  background: #ffffff; border-color: #e5e7eb;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+.tb-btn {
+  border: none; padding: 6px 13px; border-radius: 8px;
+  cursor: pointer; font-size: 12px; font-family: 'Inter', sans-serif;
+  font-weight: 500; transition: all 0.15s;
+  background: #1a2744; color: #93c5fd;
+}
+.tb-btn:hover { background: #1e3a5f; color: #eff6ff; }
+body.light .tb-btn { background: #f1f5f9; color: #3b82f6; }
+body.light .tb-btn:hover { background: #dbeafe; color: #1d4ed8; }
+#layoutSel {
+  border: none; padding: 5px 9px; border-radius: 8px; cursor: pointer;
+  font-size: 12px; font-family: 'Inter', sans-serif; font-weight: 500;
+  background: #1a2744; color: #93c5fd;
+}
+body.light #layoutSel { background: #f1f5f9; color: #3b82f6; }
+
+/* ── Nav links ───────────────────────────────────────────────────────── */
+#navLinks { position: fixed; top: 12px; left: 258px; z-index: 20; display: flex; gap: 6px; }
+.nav-link {
+  font-size: 11px; padding: 4px 10px; border-radius: 7px;
+  text-decoration: none; font-weight: 500;
+  background: #111827; color: #9ca3af;
+  border: 1px solid #1f2937;
+}
+.nav-link:hover { background: #1f2937; color: #f3f4f6; }
+body.light .nav-link { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+body.light .nav-link:hover { background: #e2e8f0; color: #1e293b; }
+
+/* ── Top-right controls ──────────────────────────────────────────────── */
+#topRight { position: fixed; top: 12px; right: 12px; z-index: 20; display: flex; gap: 6px; }
+.icon-btn {
+  font-size: 12px; padding: 5px 10px; border-radius: 7px; cursor: pointer;
+  font-weight: 500; border: 1px solid #1f2937;
+  background: #111827; color: #9ca3af;
+}
+.icon-btn:hover { background: #1f2937; color: #f3f4f6; }
+body.light .icon-btn { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+
+/* ── Detail panel ────────────────────────────────────────────────────── */
+#detailPanel {
+  position: fixed; right: 16px; top: 52px; width: 272px;
+  z-index: 20; border-radius: 12px; border: 1px solid #1a2235;
+  overflow: hidden; max-height: calc(100vh - 80px);
+  display: none; flex-direction: column;
+  background: #0b1122;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+body.light #detailPanel { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+
+/* ── Inputs ──────────────────────────────────────────────────────────── */
+.inp {
+  border: 1px solid #1f2937; border-radius: 7px;
+  padding: 6px 10px; font-size: 12px; width: 100%;
+  font-family: 'Inter', sans-serif;
+  background: #111827; color: #e5e7eb;
+}
+.inp:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 2px rgba(124,58,237,0.15); }
+body.light .inp { background: #f8fafc; border-color: #cbd5e1; color: #1e293b; }
+
+/* ── Table list items ────────────────────────────────────────────────── */
+.tbl-item {
+  padding: 5px 10px; border-radius: 7px; cursor: pointer;
+  font-size: 12px; display: flex; align-items: center; gap: 6px;
+  transition: background 0.1s;
+}
+.tbl-item:hover { background: #111827; }
+body.light .tbl-item:hover { background: #f1f5f9; }
+.tbl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.tbl-checkbox { accent-color: #7c3aed; }
+
+/* ── Legend ──────────────────────────────────────────────────────────── */
+#legend {
+  position: fixed; bottom: 72px; left: 258px;
+  z-index: 20; display: flex; flex-wrap: wrap; gap: 6px;
+}
+.leg-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; border-radius: 7px; padding: 3px 9px;
+  border: 1px solid #1a2235;
+  background: #080e1c; color: #9ca3af;
+}
+body.light .leg-item { background: #f8fafc; border-color: #e2e8f0; color: #475569; }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ── Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div id="cy"></div>
+
+<!-- Sidebar toggle -->
+<button id="sidebarToggle" onclick="toggleSidebar()">◀</button>
+
+<!-- Navigation -->
+<div id="navLinks">
+  <a href="index.html" class="nav-link">← Home</a>
+  <a href="data_dictionary.html" class="nav-link">📖 Dict</a>
+  <a href="data_profiling.html" class="nav-link">📊 Profile</a>
+</div>
+
+<!-- Top right controls -->
+<div id="topRight">
+  <button class="icon-btn" onclick="exportPng()" title="Export PNG">🖼 PNG</button>
+  <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">🌙</button>
+</div>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <div style="padding:12px 12px 10px;border-bottom:1px solid #1a2235">
+    <div style="font-weight:700;font-size:14px;margin-bottom:2px;color:#f1f5f9">{{ data.db_name }}</div>
+    <div style="font-size:11px;color:#4b5563">Entity Relationship Diagram</div>
+    <input class="inp" style="margin-top:8px" type="text" id="tableSearch"
+           placeholder="Search tables…" oninput="filterTables(this.value)"/>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:6px" id="tableListEl"></div>
+  <div style="padding:10px 12px;border-top:1px solid #1a2235;font-size:10px;color:#4b5563">
+    <div style="margin-bottom:4px">Click node to inspect · Drag to pan · Scroll to zoom</div>
+    <div>
+      <button onclick="selectAllTables(true)"  style="background:none;border:none;color:#7c3aed;cursor:pointer;font-size:10px;font-family:inherit;padding:0">Show all</button>
+      <span style="margin:0 4px;color:#374151">·</span>
+      <button onclick="selectAllTables(false)" style="background:none;border:none;color:#7c3aed;cursor:pointer;font-size:10px;font-family:inherit;padding:0">Hide all</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div id="toolbar">
+  <button class="tb-btn" onclick="cy.zoom(cy.zoom()*1.25)">＋ Zoom</button>
+  <button class="tb-btn" onclick="cy.zoom(cy.zoom()*0.8)">－ Zoom</button>
+  <button class="tb-btn" onclick="cy.fit(undefined,40)">Fit All</button>
+  <button class="tb-btn" onclick="cy.reset()">Reset</button>
+  <select id="layoutSel" onchange="changeLayout(this.value)">
+    <option value="dagre">Dagre (hierarchy)</option>
+    <option value="cose">CoSE (force)</option>
+    <option value="breadthfirst">Breadth First</option>
+    <option value="circle">Circle</option>
+    <option value="grid">Grid</option>
+  </select>
+</div>
+
+<!-- Legend -->
+<div id="legend"></div>
+
+<!-- Detail panel -->
+<div id="detailPanel">
+  <div style="padding:12px;border-bottom:1px solid #1a2235;display:flex;align-items:center">
+    <span id="detailTitle" style="font-weight:700;font-size:13px;flex:1;font-family:'JetBrains Mono',monospace"></span>
+    <button onclick="document.getElementById('detailPanel').style.display='none'"
+            style="background:none;border:none;color:#4b5563;cursor:pointer;font-size:18px;line-height:1">×</button>
+  </div>
+  <div id="detailBody" style="overflow-y:auto;flex:1;padding:12px;font-size:12px"></div>
+</div>
+
+<script>
+const RAW = {{ data_json | safe }};
+const TYPE_COLORS = RAW.type_colors || {};
+const TYPE_LABELS  = RAW.type_labels  || {};
+let sidebarOpen = true;
+let hiddenTables = new Set();
+
+// ── Node dimensions ────────────────────────────────────────────────────────
+const NODE_W    = 210;
+const HDR_H     = 42;
+const COL_H     = 25;
+const DIV_H     = 5;
+const EXTRA_H   = 18;
+const FOOTER_H  = 26;
+const NO_KEY_H  = 34;
+
+function calcNodeHeight(node) {
+  const cols   = node.columns || [];
+  const pkCols = cols.filter(c => c.is_primary_key);
+  const fkCols = cols.filter(c => c.is_foreign_key && !c.is_primary_key);
+  const keyCount = pkCols.length + fkCols.length;
+  if (keyCount === 0) return HDR_H + NO_KEY_H + FOOTER_H;
+  const hasDivider = pkCols.length > 0 && fkCols.length > 0;
+  const extraCount = (node.column_count || 0) - keyCount;
+  return HDR_H
+    + keyCount * COL_H
+    + (hasDivider ? DIV_H : 0)
+    + (extraCount > 0 ? EXTRA_H : 0)
+    + FOOTER_H;
+}
+
+// ── HTML node template ─────────────────────────────────────────────────────
+function buildNodeHtml(data) {
+  const color     = TYPE_COLORS[data.table_type] || '#4f46e5';
+  const typeLabel = TYPE_LABELS[data.table_type]  || '';
+  const cols      = data.columns || [];
+  const pkCols    = cols.filter(c => c.is_primary_key);
+  const fkCols    = cols.filter(c => c.is_foreign_key && !c.is_primary_key);
+  const extraCount = (data.column_count || 0) - pkCols.length - fkCols.length;
+
+  const colRow = (c, cls) => {
+    const icon      = cls === 'pk' ? '🔑' : '🔗';
+    const shortType = (c.type || '').split('(')[0].toUpperCase().replace('CHARACTER VARYING','VARCHAR').slice(0, 12);
+    return `<div class="cy-col ${cls}">
+      <span class="cy-col-icon">${icon}</span>
+      <span class="cy-col-name" title="${c.name}">${c.name}</span>
+      <span class="cy-col-type">${shortType}</span>
+    </div>`;
+  };
+
+  const pkHtml  = pkCols.map(c => colRow(c, 'pk')).join('');
+  const fkHtml  = fkCols.map(c => colRow(c, 'fk')).join('');
+  const divider = (pkHtml && fkHtml) ? '<div class="cy-section-divider"></div>' : '';
+  const bodyHtml = (pkHtml || fkHtml)
+    ? pkHtml + divider + fkHtml
+    : '<div class="cy-no-keys">No PK / FK columns</div>';
+  const extraHtml = extraCount > 0
+    ? `<div class="cy-extra">+${extraCount} more columns</div>` : '';
+
+  return `<div class="cy-card" style="--accent:${color}">
+    <div class="cy-header">
+      <span class="cy-title" title="${data.name}">${data.name}</span>
+      ${typeLabel ? `<span class="cy-type-badge">${typeLabel}</span>` : ''}
+    </div>
+    <div class="cy-body">${bodyHtml}${extraHtml}</div>
+    <div class="cy-footer">
+      <span>${(data.row_count || 0).toLocaleString()} rows</span>
+      <span>${data.column_count} cols</span>
+    </div>
+  </div>`;
+}
+
+// ── Theme ──────────────────────────────────────────────────────────────────
+function isDarkMode() { return !document.body.classList.contains('light'); }
+
+function toggleTheme() {
+  document.body.classList.toggle('light');
+  document.getElementById('themeBtn').textContent = isDarkMode() ? '🌙' : '☀️';
+  localStorage.setItem('dbdocs_theme', isDarkMode() ? 'dark' : 'light');
+  if (cy) cy.style().fromJson(buildCyStyle()).update();
+}
+(function () {
+  const t = localStorage.getItem('dbdocs_theme') || 'dark';
+  if (t === 'light') {
+    document.body.classList.add('light');
+    document.getElementById('themeBtn').textContent = '☀️';
+  }
+})();
+
+// ── Cytoscape style ────────────────────────────────────────────────────────
+function buildCyStyle() {
+  const dark = isDarkMode();
+  return [
+    {
+      selector: 'node',
+      style: {
+        'label':            '',           // HTML label plugin draws the card
+        'background-color': 'transparent',
+        'border-width':     0,
+        'shape':            'rectangle',
+        'width':            NODE_W,
+        'height':           'data(nodeHeight)',
+        'padding':          0,
+      }
+    },
+    {
+      selector: 'node:selected',
+      style: {
+        'border-color': '#7c3aed',
+        'border-width': 2,
+        'border-opacity': 1,
+      }
+    },
+    {
+      selector: 'edge',
+      style: {
+        'width':                2,
+        'line-color':           dark ? '#1e3a5f' : '#bfdbfe',
+        'target-arrow-color':   dark ? '#3b82f6' : '#2563eb',
+        'target-arrow-shape':   'vee',
+        'arrow-scale':          1.1,
+        'curve-style':          'bezier',
+        'label':                'data(cardinality)',
+        'font-size':            9,
+        'font-weight':          '600',
+        'color':                dark ? '#475569' : '#94a3b8',
+        'font-family':          'Inter, sans-serif',
+        'text-background-color':    dark ? '#060b18' : '#eef0f5',
+        'text-background-opacity':  0.9,
+        'text-background-padding':  '3px',
+        'text-background-shape':    'round-rectangle',
+      }
+    },
+    {
+      selector: 'edge:selected',
+      style: {
+        'line-color':         '#7c3aed',
+        'target-arrow-color': '#7c3aed',
+        'width':              2.5,
+      }
+    },
+    {
+      selector: 'edge.inferred-edge',
+      style: {
+        'line-style':           'dashed',
+        'line-dash-pattern':    [6, 4],
+        'line-color':           dark ? '#1e3a5f' : '#bfdbfe',
+        'target-arrow-color':   dark ? '#3b82f6' : '#2563eb',
+        'opacity':              0.65,
+      }
+    },
+    {
+      selector: '.highlighted',
+      style: {
+        'border-color': '#7c3aed',
+        'border-width': 2.5,
+      }
+    },
+    {
+      selector: '.faded',
+      style: { 'opacity': 0.15 }
+    },
+  ];
+}
+
+// ── Build Cytoscape elements ───────────────────────────────────────────────
+const elements = [
+  ...RAW.nodes.map(n => ({
+    data: {
+      id:           n.id,
+      name:         n.name || n.id || n.label,
+      schema:       n.schema,
+      row_count:    n.row_count,
+      column_count: n.column_count,
+      table_type:   n.table_type,
+      columns:      n.columns,
+      nodeHeight:   calcNodeHeight(n),
+    }
+  })),
+  ...RAW.edges.map(e => ({
+    data: {
+      id:          e.id,
+      source:      e.source,
+      target:      e.target,
+      source_col:  e.source_col,
+      target_col:  e.target_col,
+      label:       e.label,
+      cardinality: e.cardinality || 'N:1',
+      inferred:    e.inferred || false,
+    },
+    classes: e.inferred ? 'inferred-edge' : ''
+  }))
+];
+
+// ── Init Cytoscape ─────────────────────────────────────────────────────────
+cytoscape.use(cytoscapeDagre);
+
+const cy = cytoscape({
+  container: document.getElementById('cy'),
+  elements,
+  style: buildCyStyle(),
+  layout: {
+    name:     'dagre',
+    rankDir:  'TB',
+    nodeSep:  50,
+    rankSep:  100,
+    padding:  50,
+  },
+  minZoom: 0.08,
+  maxZoom: 3,
+  wheelSensitivity: 0.3,
+});
+
+// ── HTML label nodes ───────────────────────────────────────────────────────
+cy.nodeHtmlLabel([{
+  query:      'node',
+  halign:     'center',
+  valign:     'center',
+  halignBox:  'center',
+  valignBox:  'center',
+  tpl: function (data) { return buildNodeHtml(data); }
+}]);
+
+// ── Edge hover highlight ───────────────────────────────────────────────────
+cy.on('mouseover', 'edge', function (evt) {
+  evt.target.style({ 'line-color': '#7c3aed', 'target-arrow-color': '#7c3aed', 'width': 2.5 });
+});
+cy.on('mouseout', 'edge', function (evt) {
+  evt.target.style({ 'line-color': '', 'target-arrow-color': '', 'width': '' });
+});
+
+// ── Node click → detail panel ─────────────────────────────────────────────
+cy.on('tap', 'node', function (evt) {
+  const d    = evt.target.data();
+  const cols = d.columns || [];
+  const pks  = cols.filter(c => c.is_primary_key);
+  const fks  = cols.filter(c => c.is_foreign_key);
+  const tc   = TYPE_COLORS[d.table_type] || '#4f46e5';
+  const tl   = TYPE_LABELS[d.table_type] || '';
+
+  document.getElementById('detailTitle').textContent = d.name;
+  document.getElementById('detailPanel').style.display = 'flex';
+  document.getElementById('detailBody').innerHTML = `
+    <div style="margin-bottom:10px">
+      ${tl ? `<span style="background:${tc}22;color:${tc};padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em">${tl}</span>` : ''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div><div style="color:#4b5563;font-size:10px;margin-bottom:2px">Rows</div><div style="font-weight:700;font-size:13px">${(d.row_count||0).toLocaleString()}</div></div>
+      <div><div style="color:#4b5563;font-size:10px;margin-bottom:2px">Columns</div><div style="font-weight:700;font-size:13px">${d.column_count}</div></div>
+      <div><div style="color:#4b5563;font-size:10px;margin-bottom:2px">Primary Keys</div><div style="font-weight:700;font-size:13px">${pks.length}</div></div>
+      <div><div style="color:#4b5563;font-size:10px;margin-bottom:2px">Foreign Keys</div><div style="font-weight:700;font-size:13px">${fks.length}</div></div>
+    </div>
+    <div style="font-weight:600;margin-bottom:8px;font-size:10px;color:#4b5563;text-transform:uppercase;letter-spacing:0.06em">All Columns</div>
+    ${cols.map(c => `
+      <div style="display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid #111827">
+        <span style="font-size:10px;width:13px;text-align:center;flex-shrink:0">${c.is_primary_key ? '🔑' : c.is_foreign_key ? '🔗' : '·'}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${c.is_primary_key ? '#fcd34d' : c.is_foreign_key ? '#a5b4fc' : '#cbd5e1'}">${c.name}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#60a5fa;flex-shrink:0">${(c.type||'').split('(')[0].toUpperCase().slice(0,10)}</span>
+      </div>`).join('')}
+    <div style="margin-top:12px">
+      <a href="data_dictionary.html#table_${RAW.nodes.findIndex(n => n.name === d.name)}"
+         style="color:#7c3aed;font-size:11px;font-weight:500">→ Open in Data Dictionary</a>
+    </div>`;
+
+  // Highlight neighbourhood
+  cy.elements().removeClass('highlighted faded');
+  evt.target.addClass('highlighted');
+  evt.target.neighborhood().addClass('highlighted');
+  cy.elements().not(evt.target.union(evt.target.neighborhood())).addClass('faded');
+});
+
+cy.on('tap', function (evt) {
+  if (evt.target === cy) {
+    cy.elements().removeClass('highlighted faded');
+    document.getElementById('detailPanel').style.display = 'none';
+  }
+});
+
+// ── Sidebar table list ─────────────────────────────────────────────────────
+function buildTableList() {
+  const el = document.getElementById('tableListEl');
+  el.innerHTML = '';
+  RAW.nodes.forEach((n, i) => {
+    const color = TYPE_COLORS[n.table_type] || '#4f46e5';
+    const div   = document.createElement('div');
+    div.className = 'tbl-item';
+    div.id = 'tblitem_' + i;
+    div.dataset.name = n.name.toLowerCase();
+    div.innerHTML = `
+      <input type="checkbox" class="tbl-checkbox" checked
+             onclick="toggleTableVisibility('${n.name}', this.checked); event.stopPropagation()"/>
+      <span class="tbl-dot" style="background:${color}"></span>
+      <span class="tbl-label" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:11px" title="${n.name}">${n.name}</span>
+      <span style="font-size:10px;color:#374151">${(n.row_count||0).toLocaleString()}</span>`;
+    div.querySelector('.tbl-label').addEventListener('click', () => {
+      const node = cy.$('#' + n.name);
+      node.select();
+      cy.animate({ fit: { eles: node, padding: 80 }, duration: 400, easing: 'ease-in-out-quad' });
+    });
+    el.appendChild(div);
+  });
+}
+
+function filterTables(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.tbl-item').forEach(el => {
+    el.style.display = (!q || el.dataset.name.includes(q)) ? '' : 'none';
+  });
+}
+
+function toggleTableVisibility(tableName, visible) {
+  const node = cy.$('#' + tableName);
+  node.style('display', visible ? 'element' : 'none');
+  if (visible) hiddenTables.delete(tableName);
+  else         hiddenTables.add(tableName);
+}
+
+function selectAllTables(show) {
+  document.querySelectorAll('.tbl-item input[type=checkbox]').forEach(cb => cb.checked = show);
+  RAW.nodes.forEach(n => toggleTableVisibility(n.name, show));
+}
+
+// ── Legend ─────────────────────────────────────────────────────────────────
+function buildLegend() {
+  const legend  = document.getElementById('legend');
+  const typeSet = new Set(RAW.nodes.map(n => n.table_type).filter(t => t && t !== 'unknown'));
+  legend.innerHTML = '';
+  typeSet.forEach(type => {
+    const color = TYPE_COLORS[type] || '#4f46e5';
+    const label = TYPE_LABELS[type] || type;
+    const item  = document.createElement('div');
+    item.className = 'leg-item';
+    item.innerHTML = `<div class="leg-dot" style="background:${color}"></div>${label}`;
+    legend.appendChild(item);
+  });
+  const keys = document.createElement('div');
+  keys.className = 'leg-item';
+  keys.innerHTML = '🔑 PK &nbsp; 🔗 FK';
+  legend.appendChild(keys);
+
+  const hasInferred = RAW.edges.some(e => e.inferred);
+  if (hasInferred) {
+    const inf = document.createElement('div');
+    inf.className = 'leg-item';
+    inf.innerHTML = '<span style="display:inline-block;width:18px;height:2px;border-top:2px dashed #3b82f6;vertical-align:middle;margin-right:4px;opacity:0.7"></span>Inferred FK';
+    legend.appendChild(inf);
+  }
+}
+
+// ── Layout ─────────────────────────────────────────────────────────────────
+function changeLayout(name) {
+  cy.layout({
+    name, padding: 50, nodeSep: 50, rankSep: 100,
+    rankDir: 'TB', animate: true, animationDuration: 450,
+    animationEasing: 'ease-in-out-quad',
+  }).run();
+}
+
+// ── Sidebar toggle ─────────────────────────────────────────────────────────
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  const sb  = document.getElementById('sidebar');
+  const tog = document.getElementById('sidebarToggle');
+  const nav = document.getElementById('navLinks');
+  const leg = document.getElementById('legend');
+  const offset = sidebarOpen ? '248px' : '0';
+  sb.style.transform  = sidebarOpen ? '' : 'translateX(-248px)';
+  tog.style.left      = sidebarOpen ? '248px' : '0';
+  tog.textContent     = sidebarOpen ? '◀' : '▶';
+  nav.style.left      = sidebarOpen ? '258px' : '10px';
+  leg.style.left      = sidebarOpen ? '258px' : '10px';
+}
+
+// ── Export PNG ─────────────────────────────────────────────────────────────
+function exportPng() {
+  const png = cy.png({ output: 'blob', scale: 2, bg: isDarkMode() ? '#060b18' : '#eef0f5' });
+  const a   = document.createElement('a');
+  a.href    = URL.createObjectURL(png);
+  a.download = '{{ data.db_name }}_erd.png';
+  a.click();
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+buildTableList();
+buildLegend();
+cy.fit(undefined, 50);
+</script>
+</body>
+</html>

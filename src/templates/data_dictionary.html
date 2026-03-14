@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Data Dictionary – {{ data.db_name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: { extend: { fontFamily: { sans: ['Inter','sans-serif'], mono: ['JetBrains Mono','monospace'] } } }
+}
+</script>
+<style>
+:root { --bg:#0a0e1a; --card:#111827; --border:#1f2937; --accent:#7c3aed; --accent2:#6366f1; }
+.dark body { background:#0a0e1a; color:#e5e7eb; }
+.light body { background:#f3f4f6; color:#111827; }
+.dark .card { background:#111827; border-color:#1f2937; }
+.light .card { background:#ffffff; border-color:#e5e7eb; }
+.dark .sidebar { background:#0d1117; border-color:#1f2937; }
+.light .sidebar { background:#f9fafb; border-color:#e5e7eb; }
+.dark .th { background:#1f2937; color:#9ca3af; }
+.light .th { background:#f3f4f6; color:#6b7280; }
+.dark .tr-hover:hover { background:#1f2937; }
+.light .tr-hover:hover { background:#f9fafb; }
+.dark .inp { background:#1f2937; border-color:#374151; color:#e5e7eb; }
+.light .inp { background:#fff; border-color:#d1d5db; color:#111827; }
+.dark .tag { background:#1e1b4b; color:#a5b4fc; }
+.light .tag { background:#ede9fe; color:#4f46e5; }
+.dark .code-block { background:#0d1117; }
+.light .code-block { background:#f8fafc; border:1px solid #e2e8f0; }
+.pii-badge { background:#7f1d1d; color:#fca5a5; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.pk-badge  { background:#78350f; color:#fcd34d; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.fk-badge  { background:#1e3a5f; color:#93c5fd; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.nn-badge  { background:#1c2b1c; color:#86efac; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.idx-badge { background:#2d1b4e; color:#c4b5fd; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.warn-badge { background:#451a03; color:#fdba74; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.type-badge { font-size:0.65rem; padding:1px 8px; border-radius:9999px; font-weight:600; }
+.lineage-tag { background:#0c2a1e; color:#6ee7b7; font-size:0.6rem; padding:1px 5px; border-radius:4px; }
+.dark .lineage-tag { background:#0c2a1e; color:#6ee7b7; }
+.light .lineage-tag { background:#d1fae5; color:#065f46; }
+.active-table { border-left: 3px solid #7c3aed !important; }
+.scroll-area { height: calc(100vh - 120px); overflow-y: auto; }
+/* adaptive helpers */
+.dark .bdr{border-color:#1f2937}.light .bdr{border-color:#e5e7eb}
+.dark .txt-h{color:#e5e7eb}.light .txt-h{color:#111827}
+.dark .btn-s{background:#374151;color:#d1d5db}.light .btn-s{background:#f1f5f9;color:#374151;border:1px solid #d1d5db}
+.dark .btn-s:hover{background:#4b5563}.light .btn-s:hover{background:#e2e8f0}
+.dark .sb-hover:hover{background:#1f2937}.light .sb-hover:hover{background:#f1f5f9}
+.dark .sect-hover:hover{background:rgba(31,41,55,0.5)}.light .sect-hover:hover{background:rgba(243,244,246,0.8)}
+.dark .llm-d{background:rgba(76,29,149,0.12);color:#d1d5db}.light .llm-d{background:rgba(237,233,254,0.4);color:#374151}
+.scroll-area::-webkit-scrollbar { width:4px; }
+.scroll-area::-webkit-scrollbar-track { background:transparent; }
+.scroll-area::-webkit-scrollbar-thumb { background:#374151; border-radius:2px; }
+.tooltip { position:relative; }
+.tooltip:hover::after { content:attr(data-tip); position:absolute; bottom:110%; left:50%; transform:translateX(-50%); background:#111827; color:#e5e7eb; font-size:0.7rem; padding:3px 8px; border-radius:4px; white-space:nowrap; z-index:50; pointer-events:none; }
+@media print {
+  .no-print { display:none !important; }
+  .main-content { margin-left:0 !important; }
+  body { background:white !important; color:black !important; }
+}
+</style>
+</head>
+<body class="font-sans transition-colors duration-200">
+<div id="app" class="flex h-screen overflow-hidden">
+
+<!-- Sidebar -->
+<aside class="sidebar no-print fixed left-0 top-0 h-full w-72 border-r flex flex-col z-30 transition-colors duration-200">
+  <div class="p-4 border-b border-inherit">
+    <div class="flex items-center justify-between mb-1">
+      <a href="index.html" class="text-xs text-purple-400 hover:text-purple-300">← Back to Index</a>
+      <div class="flex gap-2">
+        <button onclick="printPage()" class="tooltip text-gray-400 hover:text-gray-200 text-sm" data-tip="Print / PDF">🖨️</button>
+        <button onclick="toggleTheme()" id="themeBtn" class="tooltip text-gray-400 hover:text-gray-200 text-sm" data-tip="Toggle theme">🌙</button>
+      </div>
+    </div>
+    <h1 class="font-bold text-base truncate" title="{{ data.db_name }}">{{ data.db_name }}</h1>
+    <p class="text-xs text-gray-500 mt-0.5">Data Dictionary</p>
+  </div>
+  <div class="p-3 border-b border-inherit">
+    <div class="relative">
+      <input id="sidebarSearch" type="text" placeholder="Search tables… ( / )"
+        class="inp w-full rounded-md px-3 py-1.5 text-sm pr-8 focus:outline-none focus:ring-1 focus:ring-purple-500"/>
+      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">↵</span>
+    </div>
+    <div class="flex gap-1 mt-2 flex-wrap" id="typeFilters">
+      <button onclick="filterType('')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-purple-700 text-white" data-type="">All</button>
+      <button onclick="filterType('fact')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="fact">Fact</button>
+      <button onclick="filterType('dimension')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="dimension">Dim</button>
+      <button onclick="filterType('lookup')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="lookup">Lookup</button>
+      <button onclick="filterType('junction')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="junction">Junction</button>
+    </div>
+  </div>
+  <div class="scroll-area flex-1 p-2" id="tableList"></div>
+  <div class="p-3 border-t border-inherit text-xs text-gray-500">
+    <div id="tableCount"></div>
+    <div class="mt-1 text-gray-600 text-xs">j/k navigate · / search · Esc clear</div>
+  </div>
+</aside>
+
+<!-- Main content -->
+<main class="main-content ml-72 flex-1 overflow-y-auto scroll-area" id="mainContent">
+  <div class="sticky top-0 z-20 border-b bdr px-6 py-3 flex items-center justify-between no-print" style="background:inherit">
+    <div class="flex gap-4 text-sm">
+      <a href="data_profiling.html" class="text-blue-400 hover:text-blue-300">📊 Profiling</a>
+      <a href="erd.html" class="text-purple-400 hover:text-purple-300">🗺 ERD</a>
+    </div>
+    <div class="flex items-center gap-3">
+      <input id="colSearch" type="text" placeholder="Search columns…"
+        class="inp rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 w-48"/>
+      <span class="text-xs text-gray-500" id="genAt">{{ data.generated_at[:10] }}</span>
+    </div>
+  </div>
+  <div class="p-6 space-y-8" id="tablesContainer"></div>
+</main>
+
+</div><!-- #app -->
+
+<script>
+const RAW = {{ data_json | safe }};
+const tables = RAW.tables;
+let activeIdx = 0;
+let filteredTables = [...tables];
+let currentTypeFilter = '';
+
+// ── Theme ───────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.toggle('dark', !isDark);
+  html.classList.toggle('light', isDark);
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('dbdocs_theme', isDark ? 'light' : 'dark');
+}
+(function() {
+  const t = localStorage.getItem('dbdocs_theme') || 'dark';
+  document.documentElement.classList.toggle('dark', t==='dark');
+  document.documentElement.classList.toggle('light', t==='light');
+  if (t==='light') document.getElementById('themeBtn').textContent = '☀️';
+})();
+
+// ── Type color map ───────────────────────────────────────────────────────────
+const TYPE_COLORS = RAW.type_colors || {};
+const TYPE_LABELS = RAW.type_labels || {};
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const list = document.getElementById('tableList');
+  const cnt = document.getElementById('tableCount');
+  list.innerHTML = '';
+  filteredTables.forEach((t, i) => {
+    const origIdx = tables.indexOf(t);
+    const color = TYPE_COLORS[t.table_type] || '#4f46e5';
+    const hasPii = t.columns.some(c => c.pii_type || c.pii_detected);
+    const hasFkViol = (t.fk_integrity||[]).some(f => f.status==='violation');
+    const div = document.createElement('div');
+    div.className = 'px-2 py-2 rounded cursor-pointer border-l-2 border-transparent text-sm sb-hover transition-colors duration-100';
+    div.id = 'sb_' + origIdx;
+    div.innerHTML = `
+      <div class="flex items-center justify-between">
+        <span class="font-medium truncate" style="max-width:160px" title="${t.name}">${t.name}</span>
+        <div class="flex gap-1 items-center">
+          ${hasPii ? '<span class="text-xs text-red-400" title="PII columns">🔒</span>' : ''}
+          ${hasFkViol ? '<span class="text-xs text-orange-400" title="FK violations">⚠</span>' : ''}
+        </div>
+      </div>
+      <div class="flex items-center gap-1 mt-0.5">
+        <span class="text-xs text-gray-500">${(t.row_count||0).toLocaleString()} rows · ${t.column_count} cols</span>
+        ${t.table_type && t.table_type !== 'unknown' ? `<span class="type-badge" style="background:${color}22;color:${color}">${TYPE_LABELS[t.table_type]||t.table_type}</span>` : ''}
+      </div>`;
+    div.onclick = () => scrollToTable(origIdx);
+    list.appendChild(div);
+  });
+  cnt.textContent = `${filteredTables.length} of ${tables.length} tables`;
+}
+
+function filterType(type) {
+  currentTypeFilter = type;
+  document.querySelectorAll('.type-filter-btn').forEach(b => {
+    const active = b.dataset.type === type;
+    b.className = `type-filter-btn text-xs px-2 py-0.5 rounded ${active ? 'bg-purple-700 text-white' : 'btn-s'}`;
+  });
+  applyFilters();
+}
+
+function applyFilters() {
+  const q = document.getElementById('sidebarSearch').value.toLowerCase();
+  filteredTables = tables.filter(t => {
+    const matchQ = !q || t.name.toLowerCase().includes(q);
+    const matchType = !currentTypeFilter || t.table_type === currentTypeFilter;
+    return matchQ && matchType;
+  });
+  renderSidebar();
+}
+
+document.getElementById('sidebarSearch').addEventListener('input', applyFilters);
+
+// Column search
+document.getElementById('colSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.col-row').forEach(row => {
+    row.style.display = !q || row.dataset.name.toLowerCase().includes(q) || row.dataset.type.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+// ── Table cards ──────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Confidence badge: emoji + colour-coded pill  🟢≥80  🟡≥60  🟠≥40  🔴<40
+function confBadge(score) {
+  if (score == null) return '';
+  const n = Math.round(score);
+  let emoji, bg, fg;
+  if      (n >= 80) { emoji = '🟢'; bg = '#14532d'; fg = '#4ade80'; }
+  else if (n >= 60) { emoji = '🟡'; bg = '#1c3a0a'; fg = '#a3e635'; }
+  else if (n >= 40) { emoji = '🟠'; bg = '#451a03'; fg = '#fb923c'; }
+  else              { emoji = '🔴'; bg = '#450a0a'; fg = '#f87171'; }
+  return `<span style="flex-shrink:0;display:inline-flex;align-items:center;padding:1px 5px;border-radius:9999px;font-size:12px;background:${bg};color:${fg}" title="LLM confidence: ${n}/100">${emoji}</span>`;
+}
+
+function renderTables() {
+  const container = document.getElementById('tablesContainer');
+  container.innerHTML = '';
+  tables.forEach((t, idx) => {
+    const color = TYPE_COLORS[t.table_type] || '#4f46e5';
+    const hasPii = t.columns.some(c => c.pii_type || c.pii_detected);
+    const fkViols = (t.fk_integrity||[]).filter(f => f.status==='violation');
+    const fkErrors = (t.fk_integrity||[]).filter(f => f.status==='error');
+
+    const card = document.createElement('div');
+    card.className = 'card rounded-xl border overflow-hidden';
+    card.id = 'table_' + idx;
+
+    // Header
+    let headerHtml = `
+      <div class="px-5 py-4 border-b bdr flex items-start justify-between" style="background:linear-gradient(135deg,${color}22,transparent)">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-lg font-bold font-mono">${escHtml(t.name)}</h2>
+            ${t.schema ? `<span class="text-xs text-gray-500">${escHtml(t.schema)}</span>` : ''}
+            ${t.table_type && t.table_type!=='unknown' ? `<span class="type-badge" style="background:${color}33;color:${color}">${TYPE_LABELS[t.table_type]||t.table_type}</span>` : ''}
+            ${hasPii ? '<span class="pii-badge">🔒 PII</span>' : ''}
+            ${fkViols.length ? `<span class="warn-badge">⚠ ${fkViols.length} FK violation${fkViols.length>1?'s':''}</span>` : ''}
+          </div>
+          <div class="flex gap-3 mt-1 text-xs text-gray-400">
+            <span>${(t.row_count||0).toLocaleString()} rows</span>
+            <span>${t.columns.length} columns</span>
+            ${t.comment ? `<span class="italic">${escHtml(t.comment)}</span>` : ''}
+          </div>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <button onclick="copyColumns(${idx})" class="tooltip text-xs px-2 py-1 rounded btn-s" data-tip="Copy column list">📋 Copy</button>
+          <button onclick="toggleSql(${idx})" class="tooltip text-xs px-2 py-1 rounded btn-s" data-tip="SQL Snippets">⚡ SQL</button>
+        </div>
+      </div>`;
+
+    // LLM Description
+    let descHtml = '';
+    if (t.llm_description) {
+      const tConf = t.llm_confidence != null ? confBadge(t.llm_confidence) : '';
+      descHtml = `<div class="px-5 py-3 border-b bdr llm-d text-sm italic border-l-4 border-l-purple-500 flex items-start gap-3">
+        <span class="flex-1">${escHtml(t.llm_description)}</span>
+        ${tConf}
+      </div>`;
+    }
+
+    // SQL Snippet panel
+    const createSql = `CREATE TABLE ${t.name} (\n${t.columns.map(c => `  ${c.name} ${c.type}${c.nullable===false?' NOT NULL':''}`).join(',\n')}\n);`;
+    const selectSql = `SELECT\n  ${t.columns.slice(0,10).map(c=>c.name).join(',\n  ')}\nFROM ${t.name}\nLIMIT 100;`;
+    const sqlHtml = `
+      <div id="sql_${idx}" class="hidden px-5 py-4 border-b bdr code-block">
+        <div class="flex gap-2 mb-2">
+          <button onclick="showSnippet(${idx},'create')" class="snippet-tab text-xs px-2 py-1 rounded bg-purple-700 text-white" data-tab="create">CREATE TABLE</button>
+          <button onclick="showSnippet(${idx},'select')" class="snippet-tab text-xs px-2 py-1 rounded btn-s" data-tab="select">SELECT</button>
+          <button onclick="copySnippet(${idx})" class="ml-auto text-xs px-2 py-1 rounded btn-s">Copy SQL</button>
+        </div>
+        <pre id="snippet_${idx}" class="text-xs font-mono text-green-300 overflow-x-auto whitespace-pre-wrap">${escHtml(createSql)}</pre>
+      </div>`;
+
+    // Columns table
+    let colRows = '';
+    t.columns.forEach((c, ci) => {
+      const tags = (c.lineage_tags||[]).map(tag => `<span class="lineage-tag">${escHtml(tag)}</span>`).join(' ');
+      const namingIssue = c.naming_issue ? `<span class="tooltip warn-badge" data-tip="${escHtml(c.naming_issue)}">⚠</span>` : '';
+      const piiTag = (c.pii_type||c.pii_detected) ? `<span class="pii-badge">${escHtml(c.pii_type||c.pii_detected)}</span>` : '';
+      colRows += `
+        <tr class="col-row tr-hover border-b bdr" data-name="${escHtml(c.name)}" data-type="${escHtml(c.type)}">
+          <td class="px-3 py-2 text-center text-xs text-gray-500">${ci+1}</td>
+          <td class="px-3 py-2">
+            <div class="flex items-center gap-1 flex-wrap">
+              <span class="font-mono text-sm font-medium">${escHtml(c.name)}</span>
+              ${namingIssue}
+            </div>
+            <div class="flex flex-wrap gap-1 mt-0.5">${tags}</div>
+          </td>
+          <td class="px-3 py-2 font-mono text-xs text-blue-300">${escHtml(c.type)}</td>
+          <td class="px-3 py-2 text-center text-xs">${c.nullable===false?'<span class="text-red-400">✗</span>':'<span class="text-gray-500">✓</span>'}</td>
+          <td class="px-3 py-2">
+            <div class="flex flex-wrap gap-1">
+              ${c.is_primary_key?'<span class="pk-badge">PK</span>':''}
+              ${c.is_foreign_key?`<span class="fk-badge tooltip" data-tip="→ ${escHtml(c.foreign_key_to||'')}">FK</span>`:''}
+              ${c.nullable===false?'<span class="nn-badge">NN</span>':''}
+              ${piiTag}
+            </div>
+          </td>
+          <td class="px-3 py-2 text-xs text-gray-400 font-mono">${c.default!=null?escHtml(String(c.default)):''}</td>
+          <td class="px-3 py-2 text-xs text-gray-400">
+            <div class="flex items-start gap-1.5">
+              <span class="flex-1">${c.llm_description?escHtml(c.llm_description):(c.comment?`<span class="text-gray-500">${escHtml(c.comment)}</span>`:'')}</span>
+              ${c.llm_confidence!=null ? confBadge(c.llm_confidence) : ''}
+            </div>
+          </td>
+        </tr>`;
+    });
+
+    const colTable = `
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="th">
+              <th class="px-3 py-2 text-left text-xs font-medium w-8">#</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Column</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Type</th>
+              <th class="px-3 py-2 text-center text-xs font-medium">Null</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Flags</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Default</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Description</th>
+            </tr>
+          </thead>
+          <tbody>${colRows}</tbody>
+        </table>
+      </div>`;
+
+    // Collapsible sections
+    let extraSections = '';
+
+    // FK Integrity
+    if ((t.fk_integrity||[]).length > 0) {
+      const rows = t.fk_integrity.map(f => {
+        const statusColor = f.status==='ok' ? 'text-green-400' : f.status==='violation' ? 'text-red-400' : 'text-yellow-400';
+        return `<tr class="border-b bdr">
+          <td class="px-3 py-1.5 text-xs font-mono">${escHtml(f.local_col)}</td>
+          <td class="px-3 py-1.5 text-xs font-mono">${escHtml(f.ref_table)}.${escHtml(f.ref_col)}</td>
+          <td class="px-3 py-1.5 text-xs text-right ${statusColor}">${f.orphan_count >= 0 ? f.orphan_count.toLocaleString() : 'err'}</td>
+          <td class="px-3 py-1.5 text-xs ${statusColor} font-medium">${f.status}</td>
+        </tr>`;
+      }).join('');
+      extraSections += `
+        <div class="border-t bdr">
+          <button onclick="toggleSection(this)" class="w-full px-5 py-2.5 text-left text-sm font-medium flex items-center justify-between sect-hover transition-colors">
+            <span>🔗 FK Integrity (${t.fk_integrity.length})</span><span class="chevron text-gray-500">▶</span>
+          </button>
+          <div class="section-content hidden">
+            <table class="w-full text-sm mb-2">
+              <thead><tr class="th"><th class="px-3 py-1.5 text-xs font-medium">Local Col</th><th class="px-3 py-1.5 text-xs font-medium">References</th><th class="px-3 py-1.5 text-xs font-medium text-right">Orphans</th><th class="px-3 py-1.5 text-xs font-medium">Status</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    // Indexes
+    if ((t.indexes||[]).length > 0) {
+      const rows = t.indexes.map(ix => `<tr class="border-b bdr">
+        <td class="px-3 py-1.5 text-xs font-mono">${escHtml(ix.name||'')}</td>
+        <td class="px-3 py-1.5 text-xs">${(ix.columns||[]).join(', ')}</td>
+        <td class="px-3 py-1.5 text-xs text-center">${ix.unique?'<span class="idx-badge">UNIQUE</span>':''}</td>
+      </tr>`).join('');
+      extraSections += `
+        <div class="border-t bdr">
+          <button onclick="toggleSection(this)" class="w-full px-5 py-2.5 text-left text-sm font-medium flex items-center justify-between sect-hover transition-colors">
+            <span>📑 Indexes (${t.indexes.length})</span><span class="chevron text-gray-500">▶</span>
+          </button>
+          <div class="section-content hidden">
+            <table class="w-full text-sm mb-2">
+              <thead><tr class="th"><th class="px-3 py-1.5 text-xs font-medium">Name</th><th class="px-3 py-1.5 text-xs font-medium">Columns</th><th class="px-3 py-1.5 text-xs font-medium text-center">Unique</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    // Sample data
+    if (t.sample_data && t.sample_data.length > 0) {
+      const cols = Object.keys(t.sample_data[0]);
+      const headers = cols.map(c => `<th class="px-3 py-1.5 text-xs font-medium font-mono">${escHtml(c)}</th>`).join('');
+      const dataRows = t.sample_data.slice(0,5).map(row => 
+        `<tr class="border-b bdr">${cols.map(c => `<td class="px-3 py-1.5 text-xs font-mono text-gray-400">${escHtml(String(row[c]??''))}</td>`).join('')}</tr>`
+      ).join('');
+      extraSections += `
+        <div class="border-t bdr">
+          <button onclick="toggleSection(this)" class="w-full px-5 py-2.5 text-left text-sm font-medium flex items-center justify-between sect-hover transition-colors">
+            <span>🗂 Sample Data (${t.sample_data.length} rows)</span><span class="chevron text-gray-500">▶</span>
+          </button>
+          <div class="section-content hidden overflow-x-auto">
+            <table class="w-full text-sm mb-2">
+              <thead><tr class="th">${headers}</tr></thead>
+              <tbody>${dataRows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    card.innerHTML = headerHtml + descHtml + sqlHtml + colTable + extraSections;
+    container.appendChild(card);
+  });
+}
+
+// ── Interactions ─────────────────────────────────────────────────────────────
+function toggleSection(btn) {
+  const content = btn.nextElementSibling;
+  const chevron = btn.querySelector('.chevron');
+  const hidden = content.classList.toggle('hidden');
+  chevron.textContent = hidden ? '▶' : '▼';
+}
+
+function toggleSql(idx) {
+  const panel = document.getElementById('sql_' + idx);
+  panel.classList.toggle('hidden');
+}
+
+const sqlSnippets = {};
+function showSnippet(idx, tab) {
+  const t = tables[idx];
+  const pre = document.getElementById('snippet_' + idx);
+  const tabs = document.querySelectorAll(`#sql_${idx} .snippet-tab`);
+  tabs.forEach(b => {
+    const active = b.dataset.tab === tab;
+    b.className = `snippet-tab text-xs px-2 py-1 rounded ${active ? 'bg-purple-700 text-white' : 'btn-s'}`;
+  });
+  if (tab === 'create') {
+    pre.textContent = `CREATE TABLE ${t.name} (\n${t.columns.map(c => `  ${c.name} ${c.type}${c.nullable===false?' NOT NULL':''}`).join(',\n')}\n);`;
+  } else {
+    pre.textContent = `SELECT\n  ${t.columns.slice(0,10).map(c=>c.name).join(',\n  ')}\nFROM ${t.name}\nLIMIT 100;`;
+  }
+}
+
+function copySnippet(idx) {
+  const text = document.getElementById('snippet_' + idx).textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('SQL copied!'));
+}
+
+function copyColumns(idx) {
+  const t = tables[idx];
+  const text = t.columns.map(c => c.name).join('\n');
+  navigator.clipboard.writeText(text).then(() => showToast('Columns copied!'));
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#7c3aed;color:white;padding:8px 16px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:opacity 0.2s;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+}
+
+function printPage() {
+  window.print();
+}
+
+// ── Active table tracking via IntersectionObserver ───────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = parseInt(e.target.id.split('_')[1]);
+      document.querySelectorAll('#tableList > div').forEach(el => el.classList.remove('active-table'));
+      const sb = document.getElementById('sb_' + idx);
+      if (sb) { sb.classList.add('active-table'); sb.scrollIntoView({ block:'nearest' }); }
+      activeIdx = filteredTables.indexOf(tables[idx]);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '-10% 0px -80% 0px' });
+
+function scrollToTable(idx) {
+  const el = document.getElementById('table_' + idx);
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── Keyboard shortcuts ───────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const si = document.getElementById('sidebarSearch');
+  const ci = document.getElementById('colSearch');
+  if (document.activeElement === si || document.activeElement === ci) {
+    if (e.key === 'Escape') { si.value=''; ci.value=''; si.blur(); ci.blur(); applyFilters(); document.querySelectorAll('.col-row').forEach(r => r.style.display=''); }
+    return;
+  }
+  if (e.key === '/') { e.preventDefault(); si.focus(); si.select(); }
+  else if (e.key === 'j') {
+    const next = Math.min(activeIdx+1, filteredTables.length-1);
+    scrollToTable(tables.indexOf(filteredTables[next]));
+  } else if (e.key === 'k') {
+    const prev = Math.max(activeIdx-1, 0);
+    scrollToTable(tables.indexOf(filteredTables[prev]));
+  }
+});
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+renderTables();
+renderSidebar();
+tables.forEach((t, i) => {
+  const el = document.getElementById('table_' + i);
+  if (el) observer.observe(el);
+});
+</script>
+</body>
+</html>
