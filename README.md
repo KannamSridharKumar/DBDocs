@@ -19,6 +19,20 @@ Connect DBDocs to any SQL database and it generates a set of interactive HTML re
 
 ---
 
+## Screenshots
+
+| Overview dashboard | Data Dictionary |
+|---|---|
+| ![Overview](docs/images/screenshot_index.png) | ![Data Dictionary](docs/images/screenshot_data_dictionary.png) |
+
+| Data Profiling | Entity Relationship Diagram |
+|---|---|
+| ![Data Profiling](docs/images/screenshot_data_profiling.png) | ![ERD](docs/images/screenshot_erd.png) |
+
+> Sample output generated from the [Chinook](https://github.com/lerocha/chinook-database) database. Live HTML files in [`sample_output/chinook/`](sample_output/chinook/).
+
+---
+
 ## Quick start (SQLite — no database setup needed)
 
 ```bash
