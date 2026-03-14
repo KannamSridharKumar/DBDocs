@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Data Profiling – chinook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']}}}}</script>
+<style>
+.dark body{background:#0a0e1a;color:#e5e7eb}
+.light body{background:#f3f4f6;color:#111827}
+.dark .card{background:#111827;border-color:#1f2937}
+.light .card{background:#ffffff;border-color:#e5e7eb}
+.dark .th{background:#1f2937;color:#9ca3af}
+.light .th{background:#f3f4f6;color:#6b7280}
+.dark .inp{background:#1f2937;border-color:#374151;color:#e5e7eb}
+.light .inp{background:#fff;border-color:#d1d5db;color:#111827}
+.dark .tr-alt:nth-child(even){background:#0d1117}
+.light .tr-alt:nth-child(even){background:#f9fafb}
+.sparkbar-bg{background:#1f2937;border-radius:2px;height:6px;overflow:hidden}
+.dark .sparkbar-bg{background:#1f2937}
+.light .sparkbar-bg{background:#e5e7eb}
+.pii-badge{background:#7f1d1d;color:#fca5a5;font-size:.65rem;padding:1px 6px;border-radius:9999px}
+.pattern-badge{background:#0c3547;color:#7dd3fc;font-size:.65rem;padding:1px 6px;border-radius:9999px}
+.outlier-badge{background:#3b1a04;color:#fbbf24;font-size:.65rem;padding:1px 6px;border-radius:9999px}
+.quality-excellent{color:#22c55e} .quality-good{color:#84cc16} .quality-fair{color:#f59e0b} .quality-poor{color:#ef4444}
+@media print{.no-print{display:none!important} body{background:white!important;color:black!important}}
+.dark .bdr{border-color:#1f2937}.light .bdr{border-color:#e5e7eb}
+.dark .txt-h{color:#e5e7eb}.light .txt-h{color:#111827}
+</style>
+</head>
+<body class="font-sans transition-colors duration-200">
+
+<!-- Top nav -->
+<header class="sticky top-0 z-30 border-b bdr no-print transition-colors duration-200" style="background:inherit">
+  <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <a href="index.html" class="text-xs text-purple-400 hover:text-purple-300">← Back</a>
+      <h1 class="font-bold text-base txt-h">chinook – Data Profiling</h1>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="data_dictionary.html" class="text-xs text-blue-400 hover:text-blue-300">📖 Dictionary</a>
+      <a href="erd.html" class="text-xs text-purple-400 hover:text-purple-300">🗺 ERD</a>
+      <input id="tableSearch" type="text" placeholder="Filter tables…"
+        class="inp rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 w-40"/>
+      <button onclick="window.print()" class="text-gray-400 hover:text-gray-200 text-sm" title="Print">🖨️</button>
+      <button onclick="toggleTheme()" id="themeBtn" class="text-gray-400 hover:text-gray-200 text-sm">🌙</button>
+    </div>
+  </div>
+</header>
+
+<!-- Summary bar -->
+<div class="border-b bdr">
+  <div class="max-w-7xl mx-auto px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="card rounded-lg border p-3">
+      <div class="text-xs text-gray-500 mb-1">Tables Profiled</div>
+      <div class="text-2xl font-bold">11</div>
+    </div>
+    <div class="card rounded-lg border p-3">
+      <div class="text-xs text-gray-500 mb-1">Total Rows</div>
+      <div class="text-2xl font-bold">15,607</div>
+    </div>
+    <div class="card rounded-lg border p-3">
+      <div class="text-xs text-gray-500 mb-1">Total Columns</div>
+      <div class="text-2xl font-bold">64</div>
+    </div>
+    <div class="card rounded-lg border p-3">
+      <div class="text-xs text-gray-500 mb-1">Avg Quality Score</div>
+      <div class="text-2xl font-bold" id="avgQualityDisp">98.8</div>
+    </div>
+  </div>
+</div>
+
+<main class="max-w-7xl mx-auto px-6 py-6 space-y-6" id="tablesContainer"></main>
+
+<script>
+const RAW = {"db_name": "chinook", "generated_at": "2026-03-14T08:09:53.648004+00:00", "total_tables": 11, "total_rows": 15607, "total_columns": 64, "avg_quality_score": 98.8, "tables": [{"name": "album", "row_count": 347, "sampled_rows": 347, "column_count": 3, "total_null_cells": 0, "null_pct": 0.0, "duplicate_count": 0, "duplicate_pct": 0.0, "quality_score": 100, "issues": [], "trend_data": null, "fk_integrity": [{"fk_name": "album_artist_id_fkey", "local_col": "artist_id", "ref_table": "artist", "ref_col": "artist_id", "orphan_count": 0, "status": "ok"}], "columns": [{"name": "album_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 347, "distinct_pct": 100.0, "min_val": 1.0, "max_val": 347.0, "mean_val": 174.0, "median_val": 174.0, "std_val": 100.314505, "q25": 87.5, "q75": 260.5, "histogram": [{"bin": "1\u201336", "count": 35}, {"bin": "36\u201370", "count": 35}, {"bin": "70\u20131e+02", "count": 34}, {"bin": "1e+02\u20131.4e+02", "count": 35}, {"bin": "1.4e+02\u20131.7e+02", "count": 34}, {"bin": "1.7e+02\u20132.1e+02", "count": 35}, {"bin": "2.1e+02\u20132.4e+02", "count": 35}, {"bin": "2.4e+02\u20132.8e+02", "count": 34}, {"bin": "2.8e+02\u20133.1e+02", "count": 35}, {"bin": "3.1e+02\u20133.5e+02", "count": 35}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "title", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 347, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 2, "max_length": 95, "avg_length": 22.7, "min_date": null, "max_date": null, "top_values": [{"value": "For Those About To Rock We Salute You", "count": 1, "pct": 0.3}, {"value": "Lost, Season 3", "count": 1, "pct": 0.3}, {"value": "Rattle And Hum", "count": 1, "pct": 0.3}, {"value": "Pop", "count": 1, "pct": 0.3}, {"value": "How To Dismantle An Atomic Bomb", "count": 1, "pct": 0.3}, {"value": "B-Sides 1980-1990", "count": 1, "pct": 0.3}, {"value": "All That You Can't Leave Behind", "count": 1, "pct": 0.3}, {"value": "Achtung Baby", "count": 1, "pct": 0.3}, {"value": "Lost, Season 2", "count": 1, "pct": 0.3}, {"value": "Lost, Season 1", "count": 1, "pct": 0.3}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "artist_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 204, "distinct_pct": 58.79, "min_val": 1.0, "max_val": 275.0, "mean_val": 121.942363, "median_val": 112.0, "std_val": 77.793131, "q25": 58.0, "q75": 179.5, "histogram": [{"bin": "1\u201328", "count": 53}, {"bin": "28\u201356", "count": 26}, {"bin": "56\u201383", "count": 37}, {"bin": "83\u20131.1e+02", "count": 56}, {"bin": "1.1e+02\u20131.4e+02", "count": 42}, {"bin": "1.4e+02\u20131.7e+02", "count": 45}, {"bin": "1.7e+02\u20131.9e+02", "count": 2}, {"bin": "1.9e+02\u20132.2e+02", "count": 26}, {"bin": "2.2e+02\u20132.5e+02", "count": 29}, {"bin": "2.5e+02\u20132.8e+02", "count": 31}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}]}, {"name": "artist", "row_count": 275, "sampled_rows": 275, "column_count": 2, "total_null_cells": 0, "null_pct": 0.0, "duplicate_count": 0, "duplicate_pct": 0.0, "quality_score": 100, "issues": [], "trend_data": null, "fk_integrity": [], "columns": [{"name": "artist_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 275, "distinct_pct": 100.0, "min_val": 1.0, "max_val": 275.0, "mean_val": 138.0, "median_val": 138.0, "std_val": 79.529869, "q25": 69.5, "q75": 206.5, "histogram": [{"bin": "1\u201328", "count": 28}, {"bin": "28\u201356", "count": 27}, {"bin": "56\u201383", "count": 28}, {"bin": "83\u20131.1e+02", "count": 27}, {"bin": "1.1e+02\u20131.4e+02", "count": 27}, {"bin": "1.4e+02\u20131.7e+02", "count": 28}, {"bin": "1.7e+02\u20131.9e+02", "count": 27}, {"bin": "1.9e+02\u20132.2e+02", "count": 28}, {"bin": "2.2e+02\u20132.5e+02", "count": 27}, {"bin": "2.5e+02\u20132.8e+02", "count": 28}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "name", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 275, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 2, "max_length": 85, "avg_length": 20.6, "min_date": null, "max_date": null, "top_values": [{"value": "AC/DC", "count": 1, "pct": 0.4}, {"value": "Nega Gizza", "count": 1, "pct": 0.4}, {"value": "Mundo Livre S/A", "count": 1, "pct": 0.4}, {"value": "Los Hermanos", "count": 1, "pct": 0.4}, {"value": "Pedro Lu\u00eds E A Parede", "count": 1, "pct": 0.4}, {"value": "Charlie Brown Jr.", "count": 1, "pct": 0.4}, {"value": "Rodox", "count": 1, "pct": 0.4}, {"value": "Gustavo & Andres Veiga & Salazar", "count": 1, "pct": 0.4}, {"value": "Xis", "count": 1, "pct": 0.4}, {"value": "Richard Marlow & The Choir of Trinity College, Cambridge", "count": 1, "pct": 0.4}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}]}, {"name": "customer", "row_count": 59, "sampled_rows": 59, "column_count": 13, "total_null_cells": 130, "null_pct": 16.95, "duplicate_count": 0, "duplicate_pct": 0.0, "quality_score": 91.5, "issues": ["Column 'company' is 83% null", "Column 'phone' may contain PII (Phone) \u2014 verify", "Column 'fax' has majority nulls (80%)", "Column 'fax' may contain PII (Phone) \u2014 verify", "Column 'email' may contain PII (Email) \u2014 verify"], "trend_data": null, "fk_integrity": [{"fk_name": "customer_support_rep_id_fkey", "local_col": "support_rep_id", "ref_table": "employee", "ref_col": "employee_id", "orphan_count": 0, "status": "ok"}], "columns": [{"name": "customer_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 59, "distinct_pct": 100.0, "min_val": 1.0, "max_val": 59.0, "mean_val": 30.0, "median_val": 30.0, "std_val": 17.175564, "q25": 15.5, "q75": 44.5, "histogram": [{"bin": "1\u20136.8", "count": 6}, {"bin": "6.8\u201313", "count": 6}, {"bin": "13\u201318", "count": 6}, {"bin": "18\u201324", "count": 6}, {"bin": "24\u201330", "count": 5}, {"bin": "30\u201336", "count": 6}, {"bin": "36\u201342", "count": 6}, {"bin": "42\u201347", "count": 6}, {"bin": "47\u201353", "count": 6}, {"bin": "53\u201359", "count": 6}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "first_name", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 57, "distinct_pct": 96.61, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 3, "max_length": 9, "avg_length": 5.8, "min_date": null, "max_date": null, "top_values": [{"value": "Frank", "count": 2, "pct": 3.4}, {"value": "Mark", "count": 2, "pct": 3.4}, {"value": "Lu\u00eds", "count": 1, "pct": 1.7}, {"value": "Jo\u00e3o", "count": 1, "pct": 1.7}, {"value": "Madalena", "count": 1, "pct": 1.7}, {"value": "Hannah", "count": 1, "pct": 1.7}, {"value": "Fynn", "count": 1, "pct": 1.7}, {"value": "Niklas", "count": 1, "pct": 1.7}, {"value": "Camille", "count": 1, "pct": 1.7}, {"value": "Dominique", "count": 1, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "last_name", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 59, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 4, "max_length": 12, "avg_length": 6.9, "min_date": null, "max_date": null, "top_values": [{"value": "Gon\u00e7alves", "count": 1, "pct": 1.7}, {"value": "Kov\u00e1cs", "count": 1, "pct": 1.7}, {"value": "Sullivan", "count": 1, "pct": 1.7}, {"value": "Fernandes", "count": 1, "pct": 1.7}, {"value": "Sampaio", "count": 1, "pct": 1.7}, {"value": "Schneider", "count": 1, "pct": 1.7}, {"value": "Zimmermann", "count": 1, "pct": 1.7}, {"value": "Schr\u00f6der", "count": 1, "pct": 1.7}, {"value": "Bernard", "count": 1, "pct": 1.7}, {"value": "Lefebvre", "count": 1, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "company", "dtype": "object", "null_count": 49, "null_pct": 83.05, "distinct_count": 10, "distinct_pct": 16.95, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 5, "max_length": 48, "avg_length": 16.6, "min_date": null, "max_date": null, "top_values": [{"value": "Embraer - Empresa Brasileira de Aeron\u00e1utica S.A.", "count": 1, "pct": 1.7}, {"value": "JetBrains s.r.o.", "count": 1, "pct": 1.7}, {"value": "Woodstock Discos", "count": 1, "pct": 1.7}, {"value": "Banco do Brasil S.A.", "count": 1, "pct": 1.7}, {"value": "Riotur", "count": 1, "pct": 1.7}, {"value": "Telus", "count": 1, "pct": 1.7}, {"value": "Rogers Canada", "count": 1, "pct": 1.7}, {"value": "Google Inc.", "count": 1, "pct": 1.7}, {"value": "Microsoft Corporation", "count": 1, "pct": 1.7}, {"value": "Apple Inc.", "count": 1, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "address", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 59, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 11, "max_length": 40, "avg_length": 17.9, "min_date": null, "max_date": null, "top_values": [{"value": "Av. Brigadeiro Faria Lima, 2170", "count": 1, "pct": 1.7}, {"value": "Erzs\u00e9bet krt. 58.", "count": 1, "pct": 1.7}, {"value": "5112 48 Street", "count": 1, "pct": 1.7}, {"value": "Rua da Assun\u00e7\u00e3o 53", "count": 1, "pct": 1.7}, {"value": "Rua dos Campe\u00f5es Europeus de Viena, 4350", "count": 1, "pct": 1.7}, {"value": "Tauentzienstra\u00dfe 8", "count": 1, "pct": 1.7}, {"value": "Berger Stra\u00dfe 10", "count": 1, "pct": 1.7}, {"value": "Barbarossastra\u00dfe 19", "count": 1, "pct": 1.7}, {"value": "4, Rue Milton", "count": 1, "pct": 1.7}, {"value": "8, Rue Hanovre", "count": 1, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "city", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 53, "distinct_pct": 89.83, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 4, "max_length": 19, "avg_length": 7.8, "min_date": null, "max_date": null, "top_values": [{"value": "Prague", "count": 2, "pct": 3.4}, {"value": "Berlin", "count": 2, "pct": 3.4}, {"value": "Paris", "count": 2, "pct": 3.4}, {"value": "S\u00e3o Paulo", "count": 2, "pct": 3.4}, {"value": "London", "count": 2, "pct": 3.4}, {"value": "Mountain View", "count": 2, "pct": 3.4}, {"value": "S\u00e3o Jos\u00e9 dos Campos", "count": 1, "pct": 1.7}, {"value": "Dublin", "count": 1, "pct": 1.7}, {"value": "Lisbon", "count": 1, "pct": 1.7}, {"value": "Porto", "count": 1, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "state", "dtype": "object", "null_count": 29, "null_pct": 49.15, "distinct_count": 25, "distinct_pct": 42.37, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 2, "max_length": 6, "avg_length": 2.2, "min_date": null, "max_date": null, "top_values": [{"value": "SP", "count": 3, "pct": 5.1}, {"value": "CA", "count": 3, "pct": 5.1}, {"value": "ON", "count": 2, "pct": 3.4}, {"value": "WI", "count": 1, "pct": 1.7}, {"value": "VV", "count": 1, "pct": 1.7}, {"value": "RM", "count": 1, "pct": 1.7}, {"value": "Dublin", "count": 1, "pct": 1.7}, {"value": "NT", "count": 1, "pct": 1.7}, {"value": "MB", "count": 1, "pct": 1.7}, {"value": "NS", "count": 1, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "country", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 24, "distinct_pct": 40.68, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 3, "max_length": 14, "avg_length": 6.4, "min_date": null, "max_date": null, "top_values": [{"value": "USA", "count": 13, "pct": 22.0}, {"value": "Canada", "count": 8, "pct": 13.6}, {"value": "Brazil", "count": 5, "pct": 8.5}, {"value": "France", "count": 5, "pct": 8.5}, {"value": "Germany", "count": 4, "pct": 6.8}, {"value": "United Kingdom", "count": 3, "pct": 5.1}, {"value": "Portugal", "count": 2, "pct": 3.4}, {"value": "India", "count": 2, "pct": 3.4}, {"value": "Czech Republic", "count": 2, "pct": 3.4}, {"value": "Denmark", "count": 1, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "postal_code", "dtype": "object", "null_count": 4, "null_pct": 6.78, "distinct_count": 55, "distinct_pct": 93.22, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 4, "max_length": 10, "avg_length": 6.0, "min_date": null, "max_date": null, "top_values": [{"value": "12227-000", "count": 1, "pct": 1.7}, {"value": "00530", "count": 1, "pct": 1.7}, {"value": "B3S 1C5", "count": 1, "pct": 1.7}, {"value": "R3L 2B9", "count": 1, "pct": 1.7}, {"value": "X1A 1N6", "count": 1, "pct": 1.7}, {"value": "10789", "count": 1, "pct": 1.7}, {"value": "60316", "count": 1, "pct": 1.7}, {"value": "10779", "count": 1, "pct": 1.7}, {"value": "75009", "count": 1, "pct": 1.7}, {"value": "75002", "count": 1, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "phone", "dtype": "object", "null_count": 1, "null_pct": 1.69, "distinct_count": 58, "distinct_pct": 98.31, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 14, "max_length": 19, "avg_length": 16.8, "min_date": null, "max_date": null, "top_values": [{"value": "+55 (12) 3923-5555", "count": 1, "pct": 1.7}, {"value": "+358 09 870 2000", "count": 1, "pct": 1.7}, {"value": "+1 (204) 452-6452", "count": 1, "pct": 1.7}, {"value": "+1 (867) 920-2233", "count": 1, "pct": 1.7}, {"value": "+351 (213) 466-111", "count": 1, "pct": 1.7}, {"value": "+351 (225) 022-448", "count": 1, "pct": 1.7}, {"value": "+49 030 26550280", "count": 1, "pct": 1.7}, {"value": "+49 069 40598889", "count": 1, "pct": 1.7}, {"value": "+49 030 2141444", "count": 1, "pct": 1.7}, {"value": "+33 01 49 70 65 65", "count": 1, "pct": 1.7}], "detected_pattern": "Phone", "pii_detected": "Phone", "is_constant": false, "is_unique": false}, {"name": "fax", "dtype": "object", "null_count": 47, "null_pct": 79.66, "distinct_count": 12, "distinct_pct": 20.34, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 16, "max_length": 18, "avg_length": 17.3, "min_date": null, "max_date": null, "top_values": [{"value": "+55 (12) 3923-5566", "count": 1, "pct": 1.7}, {"value": "+420 2 4172 5555", "count": 1, "pct": 1.7}, {"value": "+55 (11) 3033-4564", "count": 1, "pct": 1.7}, {"value": "+55 (11) 3055-8131", "count": 1, "pct": 1.7}, {"value": "+55 (21) 2271-7070", "count": 1, "pct": 1.7}, {"value": "+55 (61) 3363-7855", "count": 1, "pct": 1.7}, {"value": "+1 (780) 434-5565", "count": 1, "pct": 1.7}, {"value": "+1 (604) 688-8756", "count": 1, "pct": 1.7}, {"value": "+1 (650) 253-0000", "count": 1, "pct": 1.7}, {"value": "+1 (425) 882-8081", "count": 1, "pct": 1.7}], "detected_pattern": "Phone", "pii_detected": "Phone", "is_constant": false, "is_unique": false}, {"name": "email", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 59, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 15, "max_length": 29, "avg_length": 21.0, "min_date": null, "max_date": null, "top_values": [{"value": "luisg@embraer.com.br", "count": 1, "pct": 1.7}, {"value": "ladislav_kovacs@apple.hu", "count": 1, "pct": 1.7}, {"value": "ellie.sullivan@shaw.ca", "count": 1, "pct": 1.7}, {"value": "jfernandes@yahoo.pt", "count": 1, "pct": 1.7}, {"value": "masampaio@sapo.pt", "count": 1, "pct": 1.7}, {"value": "hannah.schneider@yahoo.de", "count": 1, "pct": 1.7}, {"value": "fzimmermann@yahoo.de", "count": 1, "pct": 1.7}, {"value": "nschroder@surfeu.de", "count": 1, "pct": 1.7}, {"value": "camille.bernard@yahoo.fr", "count": 1, "pct": 1.7}, {"value": "dominiquelefebvre@gmail.com", "count": 1, "pct": 1.7}], "detected_pattern": "Email", "pii_detected": "Email", "is_constant": false, "is_unique": true}, {"name": "support_rep_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 3, "distinct_pct": 5.08, "min_val": 3.0, "max_val": 5.0, "mean_val": 3.949153, "median_val": 4.0, "std_val": 0.818403, "q25": 3.0, "q75": 5.0, "histogram": [{"bin": "3\u20133.2", "count": 21}, {"bin": "3.2\u20133.4", "count": 0}, {"bin": "3.4\u20133.6", "count": 0}, {"bin": "3.6\u20133.8", "count": 0}, {"bin": "3.8\u20134", "count": 0}, {"bin": "4\u20134.2", "count": 20}, {"bin": "4.2\u20134.4", "count": 0}, {"bin": "4.4\u20134.6", "count": 0}, {"bin": "4.6\u20134.8", "count": 0}, {"bin": "4.8\u20135", "count": 18}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "3", "count": 21, "pct": 35.6}, {"value": "4", "count": 20, "pct": 33.9}, {"value": "5", "count": 18, "pct": 30.5}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}]}, {"name": "employee", "row_count": 8, "sampled_rows": 8, "column_count": 15, "total_null_cells": 1, "null_pct": 0.83, "duplicate_count": 0, "duplicate_pct": 0.0, "quality_score": 99.6, "issues": ["Column 'state' has only one distinct value", "Column 'country' has only one distinct value", "Column 'phone' may contain PII (Phone) \u2014 verify", "Column 'fax' may contain PII (Phone) \u2014 verify", "Column 'email' may contain PII (Email) \u2014 verify"], "trend_data": {"column": "birth_date", "is_sampled": false, "by_period": [{"period": "1947-09", "count": 1}, {"period": "1958-12", "count": 1}, {"period": "1962-02", "count": 1}, {"period": "1965-03", "count": 1}, {"period": "1968-01", "count": 1}, {"period": "1970-05", "count": 1}, {"period": "1973-07", "count": 1}, {"period": "1973-08", "count": 1}]}, "fk_integrity": [{"fk_name": "employee_reports_to_fkey", "local_col": "reports_to", "ref_table": "employee", "ref_col": "employee_id", "orphan_count": 0, "status": "ok"}], "columns": [{"name": "employee_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 8, "distinct_pct": 100.0, "min_val": 1.0, "max_val": 8.0, "mean_val": 4.5, "median_val": 4.5, "std_val": 2.44949, "q25": 2.75, "q75": 6.25, "histogram": [{"bin": "1\u20131.7", "count": 1}, {"bin": "1.7\u20132.4", "count": 1}, {"bin": "2.4\u20133.1", "count": 1}, {"bin": "3.1\u20133.8", "count": 0}, {"bin": "3.8\u20134.5", "count": 1}, {"bin": "4.5\u20135.2", "count": 1}, {"bin": "5.2\u20135.9", "count": 0}, {"bin": "5.9\u20136.6", "count": 1}, {"bin": "6.6\u20137.3", "count": 1}, {"bin": "7.3\u20138", "count": 1}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "1", "count": 1, "pct": 12.5}, {"value": "2", "count": 1, "pct": 12.5}, {"value": "3", "count": 1, "pct": 12.5}, {"value": "4", "count": 1, "pct": 12.5}, {"value": "5", "count": 1, "pct": 12.5}, {"value": "6", "count": 1, "pct": 12.5}, {"value": "7", "count": 1, "pct": 12.5}, {"value": "8", "count": 1, "pct": 12.5}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "last_name", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 8, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 4, "max_length": 8, "avg_length": 6.2, "min_date": null, "max_date": null, "top_values": [{"value": "Adams", "count": 1, "pct": 12.5}, {"value": "Edwards", "count": 1, "pct": 12.5}, {"value": "Peacock", "count": 1, "pct": 12.5}, {"value": "Park", "count": 1, "pct": 12.5}, {"value": "Johnson", "count": 1, "pct": 12.5}, {"value": "Mitchell", "count": 1, "pct": 12.5}, {"value": "King", "count": 1, "pct": 12.5}, {"value": "Callahan", "count": 1, "pct": 12.5}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "first_name", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 8, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 4, "max_length": 8, "avg_length": 5.8, "min_date": null, "max_date": null, "top_values": [{"value": "Andrew", "count": 1, "pct": 12.5}, {"value": "Nancy", "count": 1, "pct": 12.5}, {"value": "Jane", "count": 1, "pct": 12.5}, {"value": "Margaret", "count": 1, "pct": 12.5}, {"value": "Steve", "count": 1, "pct": 12.5}, {"value": "Michael", "count": 1, "pct": 12.5}, {"value": "Robert", "count": 1, "pct": 12.5}, {"value": "Laura", "count": 1, "pct": 12.5}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "title", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 5, "distinct_pct": 62.5, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 8, "max_length": 19, "avg_length": 13.9, "min_date": null, "max_date": null, "top_values": [{"value": "Sales Support Agent", "count": 3, "pct": 37.5}, {"value": "IT Staff", "count": 2, "pct": 25.0}, {"value": "General Manager", "count": 1, "pct": 12.5}, {"value": "Sales Manager", "count": 1, "pct": 12.5}, {"value": "IT Manager", "count": 1, "pct": 12.5}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "reports_to", "dtype": "float64", "null_count": 1, "null_pct": 12.5, "distinct_count": 3, "distinct_pct": 37.5, "min_val": 1.0, "max_val": 6.0, "mean_val": 2.857143, "median_val": 2.0, "std_val": 2.193063, "q25": 1.5, "q75": 4.0, "histogram": [{"bin": "1\u20131.5", "count": 2}, {"bin": "1.5\u20132", "count": 0}, {"bin": "2\u20132.5", "count": 3}, {"bin": "2.5\u20133", "count": 0}, {"bin": "3\u20133.5", "count": 0}, {"bin": "3.5\u20134", "count": 0}, {"bin": "4\u20134.5", "count": 0}, {"bin": "4.5\u20135", "count": 0}, {"bin": "5\u20135.5", "count": 0}, {"bin": "5.5\u20136", "count": 2}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "2.0", "count": 3, "pct": 37.5}, {"value": "1.0", "count": 2, "pct": 25.0}, {"value": "6.0", "count": 2, "pct": 25.0}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "birth_date", "dtype": "datetime64[ns]", "null_count": 0, "null_pct": 0.0, "distinct_count": 8, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": null, "max_length": null, "avg_length": null, "min_date": "1947-09-19 00:00:00", "max_date": "1973-08-29 00:00:00", "top_values": [{"value": "1973", "count": 2, "pct": 25.0}, {"value": "1962", "count": 1, "pct": 12.5}, {"value": "1958", "count": 1, "pct": 12.5}, {"value": "1947", "count": 1, "pct": 12.5}, {"value": "1965", "count": 1, "pct": 12.5}, {"value": "1970", "count": 1, "pct": 12.5}, {"value": "1968", "count": 1, "pct": 12.5}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "hire_date", "dtype": "datetime64[ns]", "null_count": 0, "null_pct": 0.0, "distinct_count": 7, "distinct_pct": 87.5, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": null, "max_length": null, "avg_length": null, "min_date": "2002-04-01 00:00:00", "max_date": "2004-03-04 00:00:00", "top_values": [{"value": "2002", "count": 3, "pct": 37.5}, {"value": "2003", "count": 3, "pct": 37.5}, {"value": "2004", "count": 2, "pct": 25.0}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "address", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 8, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 11, "max_length": 27, "avg_length": 16.2, "min_date": null, "max_date": null, "top_values": [{"value": "11120 Jasper Ave NW", "count": 1, "pct": 12.5}, {"value": "825 8 Ave SW", "count": 1, "pct": 12.5}, {"value": "1111 6 Ave SW", "count": 1, "pct": 12.5}, {"value": "683 10 Street SW", "count": 1, "pct": 12.5}, {"value": "7727B 41 Ave", "count": 1, "pct": 12.5}, {"value": "5827 Bowness Road NW", "count": 1, "pct": 12.5}, {"value": "590 Columbia Boulevard West", "count": 1, "pct": 12.5}, {"value": "923 7 ST NW", "count": 1, "pct": 12.5}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "city", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 3, "distinct_pct": 37.5, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 7, "max_length": 10, "avg_length": 7.9, "min_date": null, "max_date": null, "top_values": [{"value": "Calgary", "count": 5, "pct": 62.5}, {"value": "Lethbridge", "count": 2, "pct": 25.0}, {"value": "Edmonton", "count": 1, "pct": 12.5}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "state", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 1, "distinct_pct": 12.5, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 2, "max_length": 2, "avg_length": 2.0, "min_date": null, "max_date": null, "top_values": [{"value": "AB", "count": 8, "pct": 100.0}], "detected_pattern": null, "pii_detected": null, "is_constant": true, "is_unique": false}, {"name": "country", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 1, "distinct_pct": 12.5, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 6, "max_length": 6, "avg_length": 6.0, "min_date": null, "max_date": null, "top_values": [{"value": "Canada", "count": 8, "pct": 100.0}], "detected_pattern": null, "pii_detected": null, "is_constant": true, "is_unique": false}, {"name": "postal_code", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 8, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 7, "max_length": 7, "avg_length": 7.0, "min_date": null, "max_date": null, "top_values": [{"value": "T5K 2N1", "count": 1, "pct": 12.5}, {"value": "T2P 2T3", "count": 1, "pct": 12.5}, {"value": "T2P 5M5", "count": 1, "pct": 12.5}, {"value": "T2P 5G3", "count": 1, "pct": 12.5}, {"value": "T3B 1Y7", "count": 1, "pct": 12.5}, {"value": "T3B 0C5", "count": 1, "pct": 12.5}, {"value": "T1K 5N8", "count": 1, "pct": 12.5}, {"value": "T1H 1Y8", "count": 1, "pct": 12.5}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "phone", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 7, "distinct_pct": 87.5, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 16, "max_length": 17, "avg_length": 16.9, "min_date": null, "max_date": null, "top_values": [{"value": "+1 (403) 262-3443", "count": 2, "pct": 25.0}, {"value": "+1 (780) 428-9482", "count": 1, "pct": 12.5}, {"value": "+1 (403) 263-4423", "count": 1, "pct": 12.5}, {"value": "1 (780) 836-9987", "count": 1, "pct": 12.5}, {"value": "+1 (403) 246-9887", "count": 1, "pct": 12.5}, {"value": "+1 (403) 456-9986", "count": 1, "pct": 12.5}, {"value": "+1 (403) 467-3351", "count": 1, "pct": 12.5}], "detected_pattern": "Phone", "pii_detected": "Phone", "is_constant": false, "is_unique": false}, {"name": "fax", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 8, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 16, "max_length": 17, "avg_length": 16.9, "min_date": null, "max_date": null, "top_values": [{"value": "+1 (780) 428-3457", "count": 1, "pct": 12.5}, {"value": "+1 (403) 262-3322", "count": 1, "pct": 12.5}, {"value": "+1 (403) 262-6712", "count": 1, "pct": 12.5}, {"value": "+1 (403) 263-4289", "count": 1, "pct": 12.5}, {"value": "1 (780) 836-9543", "count": 1, "pct": 12.5}, {"value": "+1 (403) 246-9899", "count": 1, "pct": 12.5}, {"value": "+1 (403) 456-8485", "count": 1, "pct": 12.5}, {"value": "+1 (403) 467-8772", "count": 1, "pct": 12.5}], "detected_pattern": "Phone", "pii_detected": "Phone", "is_constant": false, "is_unique": true}, {"name": "email", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 8, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 20, "max_length": 24, "avg_length": 21.8, "min_date": null, "max_date": null, "top_values": [{"value": "andrew@chinookcorp.com", "count": 1, "pct": 12.5}, {"value": "nancy@chinookcorp.com", "count": 1, "pct": 12.5}, {"value": "jane@chinookcorp.com", "count": 1, "pct": 12.5}, {"value": "margaret@chinookcorp.com", "count": 1, "pct": 12.5}, {"value": "steve@chinookcorp.com", "count": 1, "pct": 12.5}, {"value": "michael@chinookcorp.com", "count": 1, "pct": 12.5}, {"value": "robert@chinookcorp.com", "count": 1, "pct": 12.5}, {"value": "laura@chinookcorp.com", "count": 1, "pct": 12.5}], "detected_pattern": "Email", "pii_detected": "Email", "is_constant": false, "is_unique": true}]}, {"name": "genre", "row_count": 25, "sampled_rows": 25, "column_count": 2, "total_null_cells": 0, "null_pct": 0.0, "duplicate_count": 0, "duplicate_pct": 0.0, "quality_score": 100, "issues": [], "trend_data": null, "fk_integrity": [], "columns": [{"name": "genre_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 25, "distinct_pct": 100.0, "min_val": 1.0, "max_val": 25.0, "mean_val": 13.0, "median_val": 13.0, "std_val": 7.359801, "q25": 7.0, "q75": 19.0, "histogram": [{"bin": "1\u20133.4", "count": 3}, {"bin": "3.4\u20135.8", "count": 2}, {"bin": "5.8\u20138.2", "count": 3}, {"bin": "8.2\u201311", "count": 2}, {"bin": "11\u201313", "count": 2}, {"bin": "13\u201315", "count": 3}, {"bin": "15\u201318", "count": 2}, {"bin": "18\u201320", "count": 3}, {"bin": "20\u201323", "count": 2}, {"bin": "23\u201325", "count": 3}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "1", "count": 1, "pct": 4.0}, {"value": "14", "count": 1, "pct": 4.0}, {"value": "24", "count": 1, "pct": 4.0}, {"value": "23", "count": 1, "pct": 4.0}, {"value": "22", "count": 1, "pct": 4.0}, {"value": "21", "count": 1, "pct": 4.0}, {"value": "20", "count": 1, "pct": 4.0}, {"value": "19", "count": 1, "pct": 4.0}, {"value": "18", "count": 1, "pct": 4.0}, {"value": "17", "count": 1, "pct": 4.0}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "name", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 25, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 3, "max_length": 18, "avg_length": 9.0, "min_date": null, "max_date": null, "top_values": [{"value": "Rock", "count": 1, "pct": 4.0}, {"value": "R&B/Soul", "count": 1, "pct": 4.0}, {"value": "Classical", "count": 1, "pct": 4.0}, {"value": "Alternative", "count": 1, "pct": 4.0}, {"value": "Comedy", "count": 1, "pct": 4.0}, {"value": "Drama", "count": 1, "pct": 4.0}, {"value": "Sci Fi & Fantasy", "count": 1, "pct": 4.0}, {"value": "TV Shows", "count": 1, "pct": 4.0}, {"value": "Science Fiction", "count": 1, "pct": 4.0}, {"value": "Hip Hop/Rap", "count": 1, "pct": 4.0}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}]}, {"name": "invoice", "row_count": 412, "sampled_rows": 412, "column_count": 9, "total_null_cells": 230, "null_pct": 6.2, "duplicate_count": 0, "duplicate_pct": 0.0, "quality_score": 96.9, "issues": [], "trend_data": {"column": "invoice_date", "is_sampled": false, "by_period": [{"period": "2021-01", "count": 6}, {"period": "2021-02", "count": 7}, {"period": "2021-03", "count": 7}, {"period": "2021-04", "count": 7}, {"period": "2021-05", "count": 7}, {"period": "2021-06", "count": 7}, {"period": "2021-07", "count": 7}, {"period": "2021-08", "count": 7}, {"period": "2021-09", "count": 7}, {"period": "2021-10", "count": 7}, {"period": "2021-11", "count": 7}, {"period": "2021-12", "count": 7}, {"period": "2022-01", "count": 7}, {"period": "2022-02", "count": 7}, {"period": "2022-03", "count": 7}, {"period": "2022-04", "count": 7}, {"period": "2022-05", "count": 7}, {"period": "2022-06", "count": 7}, {"period": "2022-07", "count": 7}, {"period": "2022-08", "count": 7}, {"period": "2022-09", "count": 6}, {"period": "2022-10", "count": 7}, {"period": "2022-11", "count": 7}, {"period": "2022-12", "count": 7}, {"period": "2023-01", "count": 7}, {"period": "2023-02", "count": 7}, {"period": "2023-03", "count": 7}, {"period": "2023-04", "count": 7}, {"period": "2023-05", "count": 7}, {"period": "2023-06", "count": 7}, {"period": "2023-07", "count": 7}, {"period": "2023-08", "count": 7}, {"period": "2023-09", "count": 7}, {"period": "2023-10", "count": 7}, {"period": "2023-11", "count": 6}, {"period": "2023-12", "count": 7}, {"period": "2024-01", "count": 7}, {"period": "2024-02", "count": 7}, {"period": "2024-03", "count": 7}, {"period": "2024-04", "count": 7}, {"period": "2024-05", "count": 7}, {"period": "2024-06", "count": 7}, {"period": "2024-07", "count": 7}, {"period": "2024-08", "count": 7}, {"period": "2024-09", "count": 6}, {"period": "2024-10", "count": 7}, {"period": "2024-11", "count": 7}, {"period": "2024-12", "count": 7}, {"period": "2025-01", "count": 7}, {"period": "2025-02", "count": 5}, {"period": "2025-03", "count": 7}, {"period": "2025-04", "count": 5}, {"period": "2025-05", "count": 7}, {"period": "2025-06", "count": 7}, {"period": "2025-07", "count": 7}, {"period": "2025-08", "count": 7}, {"period": "2025-09", "count": 7}, {"period": "2025-10", "count": 7}, {"period": "2025-11", "count": 7}, {"period": "2025-12", "count": 7}]}, "fk_integrity": [{"fk_name": "invoice_customer_id_fkey", "local_col": "customer_id", "ref_table": "customer", "ref_col": "customer_id", "orphan_count": 0, "status": "ok"}], "columns": [{"name": "invoice_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 412, "distinct_pct": 100.0, "min_val": 1.0, "max_val": 412.0, "mean_val": 206.5, "median_val": 206.5, "std_val": 119.078406, "q25": 103.75, "q75": 309.25, "histogram": [{"bin": "1\u201342", "count": 42}, {"bin": "42\u201383", "count": 41}, {"bin": "83\u20131.2e+02", "count": 41}, {"bin": "1.2e+02\u20131.7e+02", "count": 41}, {"bin": "1.7e+02\u20132.1e+02", "count": 41}, {"bin": "2.1e+02\u20132.5e+02", "count": 41}, {"bin": "2.5e+02\u20132.9e+02", "count": 41}, {"bin": "2.9e+02\u20133.3e+02", "count": 41}, {"bin": "3.3e+02\u20133.7e+02", "count": 41}, {"bin": "3.7e+02\u20134.1e+02", "count": 42}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "customer_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 59, "distinct_pct": 14.32, "min_val": 1.0, "max_val": 59.0, "mean_val": 29.929612, "median_val": 30.0, "std_val": 17.010585, "q25": 15.0, "q75": 45.0, "histogram": [{"bin": "1\u20136.8", "count": 42}, {"bin": "6.8\u201313", "count": 42}, {"bin": "13\u201318", "count": 42}, {"bin": "18\u201324", "count": 42}, {"bin": "24\u201330", "count": 35}, {"bin": "30\u201336", "count": 42}, {"bin": "36\u201342", "count": 42}, {"bin": "42\u201347", "count": 42}, {"bin": "47\u201353", "count": 42}, {"bin": "53\u201359", "count": 41}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "invoice_date", "dtype": "datetime64[ns]", "null_count": 0, "null_pct": 0.0, "distinct_count": 354, "distinct_pct": 85.92, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": null, "max_length": null, "avg_length": null, "min_date": "2021-01-01 00:00:00", "max_date": "2025-12-22 00:00:00", "top_values": [{"value": "2021", "count": 83, "pct": 20.1}, {"value": "2022", "count": 83, "pct": 20.1}, {"value": "2023", "count": 83, "pct": 20.1}, {"value": "2024", "count": 83, "pct": 20.1}, {"value": "2025", "count": 80, "pct": 19.4}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "billing_address", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 59, "distinct_pct": 14.32, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 11, "max_length": 40, "avg_length": 17.9, "min_date": null, "max_date": null, "top_values": [{"value": "Theodor-Heuss-Stra\u00dfe 34", "count": 7, "pct": 1.7}, {"value": "Klanova 9/506", "count": 7, "pct": 1.7}, {"value": "113 Lupus St", "count": 7, "pct": 1.7}, {"value": "Rilsk\u00e1 3174/6", "count": 7, "pct": 1.7}, {"value": "796 Dundas Street West", "count": 7, "pct": 1.7}, {"value": "230 Elgin Street", "count": 7, "pct": 1.7}, {"value": "696 Osborne Street", "count": 7, "pct": 1.7}, {"value": "Porthaninkatu 9", "count": 7, "pct": 1.7}, {"value": "S\u00f8nder Boulevard 51", "count": 7, "pct": 1.7}, {"value": "Av. Paulista, 2022", "count": 7, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "billing_city", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 53, "distinct_pct": 12.86, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 4, "max_length": 19, "avg_length": 7.8, "min_date": null, "max_date": null, "top_values": [{"value": "Prague", "count": 14, "pct": 3.4}, {"value": "Berlin", "count": 14, "pct": 3.4}, {"value": "Paris", "count": 14, "pct": 3.4}, {"value": "London", "count": 14, "pct": 3.4}, {"value": "Mountain View", "count": 14, "pct": 3.4}, {"value": "S\u00e3o Paulo", "count": 14, "pct": 3.4}, {"value": "Stuttgart", "count": 7, "pct": 1.7}, {"value": "Salt Lake City", "count": 7, "pct": 1.7}, {"value": "Toronto", "count": 7, "pct": 1.7}, {"value": "Ottawa", "count": 7, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "billing_state", "dtype": "object", "null_count": 202, "null_pct": 49.03, "distinct_count": 25, "distinct_pct": 6.07, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 2, "max_length": 6, "avg_length": 2.2, "min_date": null, "max_date": null, "top_values": [{"value": "CA", "count": 21, "pct": 5.1}, {"value": "SP", "count": 21, "pct": 5.1}, {"value": "ON", "count": 14, "pct": 3.4}, {"value": "AB", "count": 7, "pct": 1.7}, {"value": "BC", "count": 7, "pct": 1.7}, {"value": "QC", "count": 7, "pct": 1.7}, {"value": "IL", "count": 7, "pct": 1.7}, {"value": "FL", "count": 7, "pct": 1.7}, {"value": "UT", "count": 7, "pct": 1.7}, {"value": "TX", "count": 7, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "billing_country", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 24, "distinct_pct": 5.83, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 3, "max_length": 14, "avg_length": 6.4, "min_date": null, "max_date": null, "top_values": [{"value": "USA", "count": 91, "pct": 22.1}, {"value": "Canada", "count": 56, "pct": 13.6}, {"value": "France", "count": 35, "pct": 8.5}, {"value": "Brazil", "count": 35, "pct": 8.5}, {"value": "Germany", "count": 28, "pct": 6.8}, {"value": "United Kingdom", "count": 21, "pct": 5.1}, {"value": "Czech Republic", "count": 14, "pct": 3.4}, {"value": "Portugal", "count": 14, "pct": 3.4}, {"value": "India", "count": 13, "pct": 3.2}, {"value": "Australia", "count": 7, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "billing_postal_code", "dtype": "object", "null_count": 28, "null_pct": 6.8, "distinct_count": 55, "distinct_pct": 13.35, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 4, "max_length": 10, "avg_length": 6.0, "min_date": null, "max_date": null, "top_values": [{"value": "70174", "count": 7, "pct": 1.7}, {"value": "14700", "count": 7, "pct": 1.7}, {"value": "14300", "count": 7, "pct": 1.7}, {"value": "M6J 1V1", "count": 7, "pct": 1.7}, {"value": "K2P 1L7", "count": 7, "pct": 1.7}, {"value": "R3L 2B9", "count": 7, "pct": 1.7}, {"value": "00530", "count": 7, "pct": 1.7}, {"value": "1720", "count": 7, "pct": 1.7}, {"value": "01310-200", "count": 7, "pct": 1.7}, {"value": "00192", "count": 7, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "total", "dtype": "float64", "null_count": 0, "null_pct": 0.0, "distinct_count": 23, "distinct_pct": 5.58, "min_val": 0.99, "max_val": 25.86, "mean_val": 5.651942, "median_val": 3.96, "std_val": 4.74532, "q25": 1.98, "q75": 8.91, "histogram": [{"bin": "0.99\u20133.5", "count": 171}, {"bin": "3.5\u20136", "count": 118}, {"bin": "6\u20138.5", "count": 3}, {"bin": "8.5\u201311", "count": 58}, {"bin": "11\u201313", "count": 1}, {"bin": "13\u201316", "count": 52}, {"bin": "16\u201318", "count": 3}, {"bin": "18\u201321", "count": 2}, {"bin": "21\u201323", "count": 2}, {"bin": "23\u201326", "count": 2}], "outlier_count": 4, "outlier_pct": 0.97, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "1.98", "count": 111, "pct": 26.9}, {"value": "3.96", "count": 57, "pct": 13.8}, {"value": "5.94", "count": 56, "pct": 13.6}, {"value": "0.99", "count": 55, "pct": 13.3}, {"value": "8.91", "count": 54, "pct": 13.1}, {"value": "13.86", "count": 49, "pct": 11.9}, {"value": "3.98", "count": 5, "pct": 1.2}, {"value": "1.99", "count": 4, "pct": 1.0}, {"value": "18.86", "count": 2, "pct": 0.5}, {"value": "21.86", "count": 2, "pct": 0.5}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}]}, {"name": "invoice_line", "row_count": 2240, "sampled_rows": 2240, "column_count": 5, "total_null_cells": 0, "null_pct": 0.0, "duplicate_count": 0, "duplicate_pct": 0.0, "quality_score": 100, "issues": ["Column 'quantity' has only one distinct value"], "trend_data": null, "fk_integrity": [{"fk_name": "invoice_line_invoice_id_fkey", "local_col": "invoice_id", "ref_table": "invoice", "ref_col": "invoice_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "invoice_line_track_id_fkey", "local_col": "track_id", "ref_table": "track", "ref_col": "track_id", "orphan_count": 0, "status": "ok"}], "columns": [{"name": "invoice_line_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 2240, "distinct_pct": 100.0, "min_val": 1.0, "max_val": 2240.0, "mean_val": 1120.5, "median_val": 1120.5, "std_val": 646.776623, "q25": 560.75, "q75": 1680.25, "histogram": [{"bin": "1\u20132.2e+02", "count": 224}, {"bin": "2.2e+02\u20134.5e+02", "count": 224}, {"bin": "4.5e+02\u20136.7e+02", "count": 224}, {"bin": "6.7e+02\u20139e+02", "count": 224}, {"bin": "9e+02\u20131.1e+03", "count": 224}, {"bin": "1.1e+03\u20131.3e+03", "count": 224}, {"bin": "1.3e+03\u20131.6e+03", "count": 224}, {"bin": "1.6e+03\u20131.8e+03", "count": 224}, {"bin": "1.8e+03\u20132e+03", "count": 224}, {"bin": "2e+03\u20132.2e+03", "count": 224}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "invoice_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 412, "distinct_pct": 18.39, "min_val": 1.0, "max_val": 412.0, "mean_val": 206.86875, "median_val": 207.0, "std_val": 119.134877, "q25": 103.0, "q75": 311.0, "histogram": [{"bin": "1\u201342", "count": 228}, {"bin": "42\u201383", "count": 226}, {"bin": "83\u20131.2e+02", "count": 227}, {"bin": "1.2e+02\u20131.7e+02", "count": 214}, {"bin": "1.7e+02\u20132.1e+02", "count": 219}, {"bin": "2.1e+02\u20132.5e+02", "count": 222}, {"bin": "2.5e+02\u20132.9e+02", "count": 224}, {"bin": "2.9e+02\u20133.3e+02", "count": 226}, {"bin": "3.3e+02\u20133.7e+02", "count": 226}, {"bin": "3.7e+02\u20134.1e+02", "count": 228}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "track_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 1984, "distinct_pct": 88.57, "min_val": 1.0, "max_val": 3500.0, "mean_val": 1717.734375, "median_val": 1708.0, "std_val": 993.797999, "q25": 874.0, "q75": 2560.0, "histogram": [{"bin": "1\u20133.5e+02", "count": 224}, {"bin": "3.5e+02\u20137e+02", "count": 237}, {"bin": "7e+02\u20131.1e+03", "count": 221}, {"bin": "1.1e+03\u20131.4e+03", "count": 239}, {"bin": "1.4e+03\u20131.8e+03", "count": 219}, {"bin": "1.8e+03\u20132.1e+03", "count": 241}, {"bin": "2.1e+03\u20132.5e+03", "count": 217}, {"bin": "2.5e+03\u20132.8e+03", "count": 243}, {"bin": "2.8e+03\u20133.2e+03", "count": 214}, {"bin": "3.2e+03\u20133.5e+03", "count": 185}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "unit_price", "dtype": "float64", "null_count": 0, "null_pct": 0.0, "distinct_count": 2, "distinct_pct": 0.09, "min_val": 0.99, "max_val": 1.99, "mean_val": 1.039554, "median_val": 0.99, "std_val": 0.217069, "q25": 0.99, "q75": 0.99, "histogram": [{"bin": "0.99\u20131.1", "count": 2129}, {"bin": "1.1\u20131.2", "count": 0}, {"bin": "1.2\u20131.3", "count": 0}, {"bin": "1.3\u20131.4", "count": 0}, {"bin": "1.4\u20131.5", "count": 0}, {"bin": "1.5\u20131.6", "count": 0}, {"bin": "1.6\u20131.7", "count": 0}, {"bin": "1.7\u20131.8", "count": 0}, {"bin": "1.8\u20131.9", "count": 0}, {"bin": "1.9\u20132", "count": 111}], "outlier_count": null, "outlier_pct": null, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "0.99", "count": 2129, "pct": 95.0}, {"value": "1.99", "count": 111, "pct": 5.0}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "quantity", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 1, "distinct_pct": 0.04, "min_val": 1.0, "max_val": 1.0, "mean_val": 1.0, "median_val": 1.0, "std_val": 0.0, "q25": 1.0, "q75": 1.0, "histogram": [{"bin": "0.5\u20130.6", "count": 0}, {"bin": "0.6\u20130.7", "count": 0}, {"bin": "0.7\u20130.8", "count": 0}, {"bin": "0.8\u20130.9", "count": 0}, {"bin": "0.9\u20131", "count": 0}, {"bin": "1\u20131.1", "count": 2240}, {"bin": "1.1\u20131.2", "count": 0}, {"bin": "1.2\u20131.3", "count": 0}, {"bin": "1.3\u20131.4", "count": 0}, {"bin": "1.4\u20131.5", "count": 0}], "outlier_count": null, "outlier_pct": null, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "1", "count": 2240, "pct": 100.0}], "detected_pattern": null, "pii_detected": null, "is_constant": true, "is_unique": false}]}, {"name": "media_type", "row_count": 5, "sampled_rows": 5, "column_count": 2, "total_null_cells": 0, "null_pct": 0.0, "duplicate_count": 0, "duplicate_pct": 0.0, "quality_score": 100, "issues": [], "trend_data": null, "fk_integrity": [], "columns": [{"name": "media_type_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 5, "distinct_pct": 100.0, "min_val": 1.0, "max_val": 5.0, "mean_val": 3.0, "median_val": 3.0, "std_val": 1.581139, "q25": 2.0, "q75": 4.0, "histogram": [{"bin": "1\u20131.4", "count": 1}, {"bin": "1.4\u20131.8", "count": 0}, {"bin": "1.8\u20132.2", "count": 1}, {"bin": "2.2\u20132.6", "count": 0}, {"bin": "2.6\u20133", "count": 0}, {"bin": "3\u20133.4", "count": 1}, {"bin": "3.4\u20133.8", "count": 0}, {"bin": "3.8\u20134.2", "count": 1}, {"bin": "4.2\u20134.6", "count": 0}, {"bin": "4.6\u20135", "count": 1}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "1", "count": 1, "pct": 20.0}, {"value": "2", "count": 1, "pct": 20.0}, {"value": "3", "count": 1, "pct": 20.0}, {"value": "4", "count": 1, "pct": 20.0}, {"value": "5", "count": 1, "pct": 20.0}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "name", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 5, "distinct_pct": 100.0, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 14, "max_length": 27, "avg_length": 20.8, "min_date": null, "max_date": null, "top_values": [{"value": "MPEG audio file", "count": 1, "pct": 20.0}, {"value": "Protected AAC audio file", "count": 1, "pct": 20.0}, {"value": "Protected MPEG-4 video file", "count": 1, "pct": 20.0}, {"value": "Purchased AAC audio file", "count": 1, "pct": 20.0}, {"value": "AAC audio file", "count": 1, "pct": 20.0}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}]}, {"name": "playlist", "row_count": 18, "sampled_rows": 18, "column_count": 2, "total_null_cells": 0, "null_pct": 0.0, "duplicate_count": 0, "duplicate_pct": 0.0, "quality_score": 100, "issues": [], "trend_data": null, "fk_integrity": [], "columns": [{"name": "playlist_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 18, "distinct_pct": 100.0, "min_val": 1.0, "max_val": 18.0, "mean_val": 9.5, "median_val": 9.5, "std_val": 5.338539, "q25": 5.25, "q75": 13.75, "histogram": [{"bin": "1\u20132.7", "count": 2}, {"bin": "2.7\u20134.4", "count": 2}, {"bin": "4.4\u20136.1", "count": 2}, {"bin": "6.1\u20137.8", "count": 1}, {"bin": "7.8\u20139.5", "count": 2}, {"bin": "9.5\u201311", "count": 2}, {"bin": "11\u201313", "count": 1}, {"bin": "13\u201315", "count": 2}, {"bin": "15\u201316", "count": 2}, {"bin": "16\u201318", "count": 2}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "1", "count": 1, "pct": 5.6}, {"value": "2", "count": 1, "pct": 5.6}, {"value": "17", "count": 1, "pct": 5.6}, {"value": "16", "count": 1, "pct": 5.6}, {"value": "15", "count": 1, "pct": 5.6}, {"value": "14", "count": 1, "pct": 5.6}, {"value": "13", "count": 1, "pct": 5.6}, {"value": "12", "count": 1, "pct": 5.6}, {"value": "11", "count": 1, "pct": 5.6}, {"value": "10", "count": 1, "pct": 5.6}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "name", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 14, "distinct_pct": 77.78, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 5, "max_length": 26, "avg_length": 12.1, "min_date": null, "max_date": null, "top_values": [{"value": "Music", "count": 2, "pct": 11.1}, {"value": "Movies", "count": 2, "pct": 11.1}, {"value": "TV Shows", "count": 2, "pct": 11.1}, {"value": "Audiobooks", "count": 2, "pct": 11.1}, {"value": "90\u2019s Music", "count": 1, "pct": 5.6}, {"value": "Music Videos", "count": 1, "pct": 5.6}, {"value": "Brazilian Music", "count": 1, "pct": 5.6}, {"value": "Classical", "count": 1, "pct": 5.6}, {"value": "Classical 101 - Deep Cuts", "count": 1, "pct": 5.6}, {"value": "Classical 101 - Next Steps", "count": 1, "pct": 5.6}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}]}, {"name": "playlist_track", "row_count": 8715, "sampled_rows": 8715, "column_count": 2, "total_null_cells": 0, "null_pct": 0.0, "duplicate_count": 0, "duplicate_pct": 0.0, "quality_score": 100, "issues": [], "trend_data": null, "fk_integrity": [{"fk_name": "playlist_track_playlist_id_fkey", "local_col": "playlist_id", "ref_table": "playlist", "ref_col": "playlist_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "playlist_track_track_id_fkey", "local_col": "track_id", "ref_table": "track", "ref_col": "track_id", "orphan_count": 0, "status": "ok"}], "columns": [{"name": "playlist_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 14, "distinct_pct": 0.16, "min_val": 1.0, "max_val": 18.0, "mean_val": 4.91704, "median_val": 5.0, "std_val": 3.476453, "q25": 1.0, "q75": 8.0, "histogram": [{"bin": "1\u20132.7", "count": 3290}, {"bin": "2.7\u20134.4", "count": 213}, {"bin": "4.4\u20136.1", "count": 1477}, {"bin": "6.1\u20137.8", "count": 0}, {"bin": "7.8\u20139.5", "count": 3291}, {"bin": "9.5\u201311", "count": 252}, {"bin": "11\u201313", "count": 75}, {"bin": "13\u201315", "count": 50}, {"bin": "15\u201316", "count": 40}, {"bin": "16\u201318", "count": 27}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "1", "count": 3290, "pct": 37.8}, {"value": "8", "count": 3290, "pct": 37.8}, {"value": "5", "count": 1477, "pct": 16.9}, {"value": "3", "count": 213, "pct": 2.4}, {"value": "10", "count": 213, "pct": 2.4}, {"value": "12", "count": 75, "pct": 0.9}, {"value": "11", "count": 39, "pct": 0.4}, {"value": "17", "count": 26, "pct": 0.3}, {"value": "13", "count": 25, "pct": 0.3}, {"value": "14", "count": 25, "pct": 0.3}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "track_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 3503, "distinct_pct": 40.2, "min_val": 1.0, "max_val": 3503.0, "mean_val": 1767.081698, "median_val": 1773.0, "std_val": 1023.669286, "q25": 888.0, "q75": 2652.0, "histogram": [{"bin": "1\u20133.5e+02", "count": 889}, {"bin": "3.5e+02\u20137e+02", "count": 823}, {"bin": "7e+02\u20131.1e+03", "count": 885}, {"bin": "1.1e+03\u20131.4e+03", "count": 872}, {"bin": "1.4e+03\u20131.8e+03", "count": 846}, {"bin": "1.8e+03\u20132.1e+03", "count": 845}, {"bin": "2.1e+03\u20132.5e+03", "count": 889}, {"bin": "2.5e+03\u20132.8e+03", "count": 881}, {"bin": "2.8e+03\u20133.2e+03", "count": 832}, {"bin": "3.2e+03\u20133.5e+03", "count": 953}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}]}, {"name": "track", "row_count": 3503, "sampled_rows": 3503, "column_count": 9, "total_null_cells": 977, "null_pct": 3.1, "duplicate_count": 0, "duplicate_pct": 0.0, "quality_score": 98.5, "issues": [], "trend_data": null, "fk_integrity": [{"fk_name": "track_album_id_fkey", "local_col": "album_id", "ref_table": "album", "ref_col": "album_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "track_genre_id_fkey", "local_col": "genre_id", "ref_table": "genre", "ref_col": "genre_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "track_media_type_id_fkey", "local_col": "media_type_id", "ref_table": "media_type", "ref_col": "media_type_id", "orphan_count": 0, "status": "ok"}], "columns": [{"name": "track_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 3503, "distinct_pct": 100.0, "min_val": 1.0, "max_val": 3503.0, "mean_val": 1752.0, "median_val": 1752.0, "std_val": 1011.373324, "q25": 876.5, "q75": 2627.5, "histogram": [{"bin": "1\u20133.5e+02", "count": 351}, {"bin": "3.5e+02\u20137e+02", "count": 350}, {"bin": "7e+02\u20131.1e+03", "count": 350}, {"bin": "1.1e+03\u20131.4e+03", "count": 350}, {"bin": "1.4e+03\u20131.8e+03", "count": 350}, {"bin": "1.8e+03\u20132.1e+03", "count": 351}, {"bin": "2.1e+03\u20132.5e+03", "count": 350}, {"bin": "2.5e+03\u20132.8e+03", "count": 350}, {"bin": "2.8e+03\u20133.2e+03", "count": 350}, {"bin": "3.2e+03\u20133.5e+03", "count": 351}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": true}, {"name": "name", "dtype": "object", "null_count": 0, "null_pct": 0.0, "distinct_count": 3257, "distinct_pct": 92.98, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 2, "max_length": 123, "avg_length": 15.9, "min_date": null, "max_date": null, "top_values": [{"value": "The Trooper", "count": 5, "pct": 0.1}, {"value": "2 Minutes To Midnight", "count": 5, "pct": 0.1}, {"value": "Wrathchild", "count": 5, "pct": 0.1}, {"value": "The Number Of The Beast", "count": 5, "pct": 0.1}, {"value": "Hallowed Be Thy Name", "count": 5, "pct": 0.1}, {"value": "Iron Maiden", "count": 5, "pct": 0.1}, {"value": "Fear Of The Dark", "count": 4, "pct": 0.1}, {"value": "The Evil That Men Do", "count": 4, "pct": 0.1}, {"value": "Sanctuary", "count": 4, "pct": 0.1}, {"value": "Running Free", "count": 4, "pct": 0.1}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "album_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 347, "distinct_pct": 9.91, "min_val": 1.0, "max_val": 347.0, "mean_val": 140.929489, "median_val": 141.0, "std_val": 81.775395, "q25": 70.5, "q75": 212.0, "histogram": [{"bin": "1\u201336", "count": 432}, {"bin": "36\u201370", "count": 444}, {"bin": "70\u20131e+02", "count": 448}, {"bin": "1e+02\u20131.4e+02", "count": 361}, {"bin": "1.4e+02\u20131.7e+02", "count": 455}, {"bin": "1.7e+02\u20132.1e+02", "count": 445}, {"bin": "2.1e+02\u20132.4e+02", "count": 520}, {"bin": "2.4e+02\u20132.8e+02", "count": 305}, {"bin": "2.8e+02\u20133.1e+02", "count": 36}, {"bin": "3.1e+02\u20133.5e+02", "count": 57}], "outlier_count": 0, "outlier_pct": 0.0, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "media_type_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 5, "distinct_pct": 0.14, "min_val": 1.0, "max_val": 5.0, "mean_val": 1.208393, "median_val": 1.0, "std_val": 0.580443, "q25": 1.0, "q75": 1.0, "histogram": [{"bin": "1\u20131.4", "count": 3034}, {"bin": "1.4\u20131.8", "count": 0}, {"bin": "1.8\u20132.2", "count": 237}, {"bin": "2.2\u20132.6", "count": 0}, {"bin": "2.6\u20133", "count": 0}, {"bin": "3\u20133.4", "count": 214}, {"bin": "3.4\u20133.8", "count": 0}, {"bin": "3.8\u20134.2", "count": 7}, {"bin": "4.2\u20134.6", "count": 0}, {"bin": "4.6\u20135", "count": 11}], "outlier_count": null, "outlier_pct": null, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "1", "count": 3034, "pct": 86.6}, {"value": "2", "count": 237, "pct": 6.8}, {"value": "3", "count": 214, "pct": 6.1}, {"value": "5", "count": 11, "pct": 0.3}, {"value": "4", "count": 7, "pct": 0.2}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "genre_id", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 25, "distinct_pct": 0.71, "min_val": 1.0, "max_val": 25.0, "mean_val": 5.725378, "median_val": 3.0, "std_val": 6.190204, "q25": 1.0, "q75": 7.0, "histogram": [{"bin": "1\u20133.4", "count": 1801}, {"bin": "3.4\u20135.8", "count": 344}, {"bin": "5.8\u20138.2", "count": 718}, {"bin": "8.2\u201311", "count": 91}, {"bin": "11\u201313", "count": 39}, {"bin": "13\u201315", "count": 119}, {"bin": "15\u201318", "count": 63}, {"bin": "18\u201320", "count": 132}, {"bin": "20\u201323", "count": 81}, {"bin": "23\u201325", "count": 115}], "outlier_count": 363, "outlier_pct": 10.36, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "1", "count": 1297, "pct": 37.0}, {"value": "7", "count": 579, "pct": 16.5}, {"value": "3", "count": 374, "pct": 10.7}, {"value": "4", "count": 332, "pct": 9.5}, {"value": "2", "count": 130, "pct": 3.7}, {"value": "19", "count": 93, "pct": 2.7}, {"value": "6", "count": 81, "pct": 2.3}, {"value": "24", "count": 74, "pct": 2.1}, {"value": "21", "count": 64, "pct": 1.8}, {"value": "14", "count": 61, "pct": 1.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "composer", "dtype": "object", "null_count": 977, "null_pct": 27.89, "distinct_count": 853, "distinct_pct": 24.35, "min_val": null, "max_val": null, "mean_val": null, "median_val": null, "std_val": null, "q25": null, "q75": null, "histogram": null, "outlier_count": null, "outlier_pct": null, "min_length": 2, "max_length": 188, "avg_length": 24.6, "min_date": null, "max_date": null, "top_values": [{"value": "Steve Harris", "count": 80, "pct": 2.3}, {"value": "U2", "count": 44, "pct": 1.3}, {"value": "Jagger/Richards", "count": 35, "pct": 1.0}, {"value": "Billy Corgan", "count": 31, "pct": 0.9}, {"value": "Kurt Cobain", "count": 26, "pct": 0.7}, {"value": "Bill Berry-Peter Buck-Mike Mills-Michael Stipe", "count": 25, "pct": 0.7}, {"value": "The Tea Party", "count": 24, "pct": 0.7}, {"value": "Chris Cornell", "count": 23, "pct": 0.7}, {"value": "Miles Davis", "count": 23, "pct": 0.7}, {"value": "Chico Science", "count": 23, "pct": 0.7}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "milliseconds", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 3080, "distinct_pct": 87.92, "min_val": 1071.0, "max_val": 5286953.0, "mean_val": 393599.212104, "median_val": 255634.0, "std_val": 535005.435207, "q25": 207281.0, "q75": 321645.0, "histogram": [{"bin": "1.1e+03\u20135.3e+05", "count": 3202}, {"bin": "5.3e+05\u20131.1e+06", "count": 86}, {"bin": "1.1e+06\u20131.6e+06", "count": 45}, {"bin": "1.6e+06\u20132.1e+06", "count": 10}, {"bin": "2.1e+06\u20132.6e+06", "count": 124}, {"bin": "2.6e+06\u20133.2e+06", "count": 34}, {"bin": "3.2e+06\u20133.7e+06", "count": 0}, {"bin": "3.7e+06\u20134.2e+06", "count": 0}, {"bin": "4.2e+06\u20134.8e+06", "count": 0}, {"bin": "4.8e+06\u20135.3e+06", "count": 2}], "outlier_count": 357, "outlier_pct": 10.19, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "bytes", "dtype": "int64", "null_count": 0, "null_pct": 0.0, "distinct_count": 3501, "distinct_pct": 99.94, "min_val": 38747.0, "max_val": 1059546140.0, "mean_val": 33510207.065373, "median_val": 8107896.0, "std_val": 105392533.664763, "q25": 6342566.0, "q75": 10266789.5, "histogram": [{"bin": "3.9e+04\u20131.1e+08", "count": 3292}, {"bin": "1.1e+08\u20132.1e+08", "count": 13}, {"bin": "2.1e+08\u20133.2e+08", "count": 54}, {"bin": "3.2e+08\u20134.2e+08", "count": 9}, {"bin": "4.2e+08\u20135.3e+08", "count": 97}, {"bin": "5.3e+08\u20136.4e+08", "count": 36}, {"bin": "6.4e+08\u20137.4e+08", "count": 0}, {"bin": "7.4e+08\u20138.5e+08", "count": 0}, {"bin": "8.5e+08\u20139.5e+08", "count": 0}, {"bin": "9.5e+08\u20131.1e+09", "count": 2}], "outlier_count": 343, "outlier_pct": 9.79, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": null, "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}, {"name": "unit_price", "dtype": "float64", "null_count": 0, "null_pct": 0.0, "distinct_count": 2, "distinct_pct": 0.06, "min_val": 0.99, "max_val": 1.99, "mean_val": 1.050805, "median_val": 0.99, "std_val": 0.239006, "q25": 0.99, "q75": 0.99, "histogram": [{"bin": "0.99\u20131.1", "count": 3290}, {"bin": "1.1\u20131.2", "count": 0}, {"bin": "1.2\u20131.3", "count": 0}, {"bin": "1.3\u20131.4", "count": 0}, {"bin": "1.4\u20131.5", "count": 0}, {"bin": "1.5\u20131.6", "count": 0}, {"bin": "1.6\u20131.7", "count": 0}, {"bin": "1.7\u20131.8", "count": 0}, {"bin": "1.8\u20131.9", "count": 0}, {"bin": "1.9\u20132", "count": 213}], "outlier_count": null, "outlier_pct": null, "min_length": null, "max_length": null, "avg_length": null, "min_date": null, "max_date": null, "top_values": [{"value": "0.99", "count": 3290, "pct": 93.9}, {"value": "1.99", "count": 213, "pct": 6.1}], "detected_pattern": null, "pii_detected": null, "is_constant": false, "is_unique": false}]}]};
+const tables = RAW.tables;
+
+// Theme
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.toggle('dark', !isDark);
+  html.classList.toggle('light', isDark);
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('dbdocs_theme', isDark ? 'light' : 'dark');
+}
+(function(){
+  const t = localStorage.getItem('dbdocs_theme') || 'dark';
+  document.documentElement.classList.toggle('dark', t==='dark');
+  document.documentElement.classList.toggle('light', t==='light');
+  if (t==='light') document.getElementById('themeBtn').textContent = '☀️';
+})();
+
+function qualityClass(q) {
+  if (q >= 90) return 'quality-excellent';
+  if (q >= 75) return 'quality-good';
+  if (q >= 50) return 'quality-fair';
+  return 'quality-poor';
+}
+
+function qualityColor(q) {
+  if (q >= 90) return '#22c55e';
+  if (q >= 75) return '#84cc16';
+  if (q >= 50) return '#f59e0b';
+  return '#ef4444';
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(n,d=1) { return n==null?'–':Number(n).toFixed(d); }
+function fmtN(n) { return n==null?'–':Number(n).toLocaleString(); }
+
+// Quality gauge SVG
+function gaugeSvg(score) {
+  const color = qualityColor(score);
+  const pct = score / 100;
+  const R = 30, cx = 40, cy = 40;
+  const startAngle = -Math.PI * 0.75, sweep = Math.PI * 1.5;
+  const endAngle = startAngle + sweep * pct;
+  const x1 = cx + R * Math.cos(startAngle), y1 = cy + R * Math.sin(startAngle);
+  const x2 = cx + R * Math.cos(endAngle), y2 = cy + R * Math.sin(endAngle);
+  const largeArc = pct > 0.5 ? 1 : 0;
+  return `<svg width="80" height="80" viewBox="0 0 80 80">
+    <path d="M${cx + R*Math.cos(startAngle)},${cy + R*Math.sin(startAngle)} A${R},${R} 0 1 1 ${cx + R*Math.cos(startAngle+sweep*0.999)},${cy + R*Math.sin(startAngle+sweep*0.999)}" fill="none" stroke="#374151" stroke-width="6" stroke-linecap="round"/>
+    ${pct > 0.01 ? `<path d="M${x1},${y1} A${R},${R} 0 ${largeArc} 1 ${x2},${y2}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round"/>` : ''}
+    <text x="40" y="44" text-anchor="middle" fill="${color}" font-size="14" font-weight="700" font-family="Inter">${score.toFixed(0)}</text>
+  </svg>`;
+}
+
+// Sparkbar
+function sparkBar(pct, color='#7c3aed') {
+  return `<div class="sparkbar-bg w-full"><div style="width:${Math.min(100,pct||0)}%;height:6px;background:${color};border-radius:2px"></div></div>`;
+}
+
+// ── Render tables ─────────────────────────────────────────────────────────────
+const chartData = {};
+let chartIdCounter = 0;
+
+function renderTables() {
+  const container = document.getElementById('tablesContainer');
+  tables.forEach((t, ti) => {
+    const issues = (t.issues||[]);
+    const fkViols = (t.fk_integrity||[]).filter(f => f.status==='violation');
+    const piiCols = t.columns.filter(c => c.pii_detected || c.detected_pattern);
+    const hasTrend = t.trend_data && t.trend_data.by_period && t.trend_data.by_period.length > 1;
+    const trendChartId = hasTrend ? 'trend_' + ti : null;
+
+    const card = document.createElement('div');
+    card.className = 'card rounded-xl border overflow-hidden table-card';
+    card.dataset.name = t.name.toLowerCase();
+    card.id = 'tbl_' + ti;
+
+    // Header
+    const qColor = qualityColor(t.quality_score);
+    card.innerHTML = `
+      <div class="px-5 py-4 border-b border-gray-800 flex items-start gap-4" style="background:linear-gradient(135deg,${qColor}11,transparent)">
+        <div>${gaugeSvg(t.quality_score)}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-lg font-bold font-mono">${esc(t.name)}</h2>
+            ${issues.length ? `<span class="text-xs bg-red-900/40 text-red-300 px-2 py-0.5 rounded">${issues.length} issue${issues.length>1?'s':''}</span>` : ''}
+            ${fkViols.length ? `<span class="text-xs bg-orange-900/40 text-orange-300 px-2 py-0.5 rounded">⚠ ${fkViols.length} FK violation${fkViols.length>1?'s':''}</span>` : ''}
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2 text-sm">
+            <div><span class="text-gray-500 text-xs">Rows</span><div class="font-semibold">${fmtN(t.row_count)}</div></div>
+            <div><span class="text-gray-500 text-xs">Sampled</span><div class="font-semibold">${fmtN(t.sampled_rows)}</div></div>
+            <div><span class="text-gray-500 text-xs">Null Rate</span><div class="font-semibold">${fmt(t.null_pct)}%</div></div>
+            <div><span class="text-gray-500 text-xs">Dup Rate</span><div class="font-semibold">${fmt(t.duplicate_pct)}%</div></div>
+          </div>
+        </div>
+        <button onclick="toggleCard(${ti})" class="shrink-0 text-gray-400 hover:text-gray-200 text-lg" id="chevron_${ti}">▼</button>
+      </div>
+
+      <!-- Issues -->
+      ${issues.length ? `
+      <div class="px-5 py-2 border-b border-gray-800 bg-red-950/20">
+        <div class="text-xs font-medium text-red-400 mb-1">⚠ Quality Issues</div>
+        <ul class="list-disc list-inside space-y-0.5">${issues.map(i=>`<li class="text-xs text-red-300">${esc(i)}</li>`).join('')}</ul>
+      </div>` : ''}
+
+      <!-- Card body -->
+      <div id="cardBody_${ti}">
+        <!-- Trend chart -->
+        ${hasTrend ? `
+        <div class="px-5 py-4 border-b border-gray-800">
+          <div class="text-xs font-medium text-gray-400 mb-2">📈 Row Trend by Month (${esc(t.trend_data.column)})${t.trend_data.is_sampled?' <span class="text-yellow-500">[sampled]</span>':''}</div>
+          <div style="height:120px"><canvas id="${trendChartId}"></canvas></div>
+        </div>` : ''}
+
+        <!-- FK Integrity -->
+        ${(t.fk_integrity||[]).length ? `
+        <div class="px-5 py-3 border-b border-gray-800">
+          <div class="text-xs font-medium text-gray-400 mb-2">🔗 FK Integrity</div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead><tr class="th"><th class="px-2 py-1.5 text-left font-medium">Local</th><th class="px-2 py-1.5 text-left font-medium">→ References</th><th class="px-2 py-1.5 text-right font-medium">Orphans</th><th class="px-2 py-1.5 text-left font-medium">Status</th></tr></thead>
+              <tbody>${(t.fk_integrity||[]).map(f=>`<tr class="border-b border-gray-800/50">
+                <td class="px-2 py-1.5 font-mono">${esc(f.local_col)}</td>
+                <td class="px-2 py-1.5 font-mono text-blue-300">${esc(f.ref_table)}.${esc(f.ref_col)}</td>
+                <td class="px-2 py-1.5 text-right ${f.status==='ok'?'text-green-400':f.status==='violation'?'text-red-400':'text-yellow-400'}">${f.orphan_count>=0?fmtN(f.orphan_count):'err'}</td>
+                <td class="px-2 py-1.5 font-medium ${f.status==='ok'?'text-green-400':f.status==='violation'?'text-red-400':'text-yellow-400'}">${esc(f.status)}</td>
+              </tr>`).join('')}</tbody>
+            </table>
+          </div>
+        </div>` : ''}
+
+        <!-- Column list -->
+        <div class="divide-y divide-gray-800/50">
+          ${t.columns.map((c, ci) => renderColumn(c, ci, t.name+'_'+ti)).join('')}
+        </div>
+      </div>`;
+
+    container.appendChild(card);
+
+    // Draw trend chart after DOM insertion
+    if (hasTrend) {
+      setTimeout(() => drawTrendChart(trendChartId, t.trend_data), 0);
+    }
+  });
+}
+
+function renderColumn(c, ci, prefix) {
+  const chartId = 'chart_' + prefix + '_' + ci;
+  const hasHistogram = c.histogram && c.histogram.length > 0;
+  const hasTopValues = c.top_values && c.top_values.length > 0;
+  const isNumeric = hasHistogram;
+  const isDate = c.min_date || c.max_date;
+  const hasChart = hasHistogram || hasTopValues;
+  
+  const piiTag = c.pii_detected ? `<span class="pii-badge">🔒 ${esc(c.pii_detected)}</span>` : '';
+  const patternTag = c.detected_pattern ? `<span class="pattern-badge">${esc(c.detected_pattern)}</span>` : '';
+  const outlierTag = c.outlier_count > 0 ? `<span class="outlier-badge">⚡ ${fmtN(c.outlier_count)} outlier${c.outlier_count>1?'s':''}</span>` : '';
+
+  const nullColor = c.null_pct > 50 ? '#ef4444' : c.null_pct > 20 ? '#f59e0b' : '#22c55e';
+  const distColor = c.distinct_pct > 90 ? '#6366f1' : '#7c3aed';
+
+  return `
+    <div class="col-prof-row">
+      <!-- Summary row -->
+      <div class="px-5 py-3 flex items-start gap-3 cursor-pointer hover:bg-gray-800/30 transition-colors" onclick="toggleColDetail('${chartId}')">
+        <div class="w-6 text-xs text-gray-600 pt-0.5">${ci+1}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1 flex-wrap">
+            <span class="font-mono text-sm font-medium">${esc(c.name)}</span>
+            <span class="text-xs text-blue-300 font-mono">${esc(c.dtype)}</span>
+            ${c.is_unique?'<span class="text-xs text-purple-400">unique</span>':''}
+            ${c.is_constant?'<span class="text-xs text-yellow-400">constant</span>':''}
+            ${piiTag}${patternTag}${outlierTag}
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-1.5">
+            <div>
+              <div class="text-xs text-gray-500">Null ${fmt(c.null_pct)}%</div>
+              ${sparkBar(c.null_pct, nullColor)}
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">Distinct ${fmt(c.distinct_pct)}%</div>
+              ${sparkBar(c.distinct_pct, distColor)}
+            </div>
+            ${c.min_val != null ? `<div class="text-xs"><span class="text-gray-500">Min</span> <span class="font-mono">${esc(String(c.min_val))}</span></div>` : ''}
+            ${c.max_val != null ? `<div class="text-xs"><span class="text-gray-500">Max</span> <span class="font-mono">${esc(String(c.max_val))}</span></div>` : ''}
+          </div>
+        </div>
+        <div class="text-xs text-gray-600 shrink-0 pt-0.5">${hasChart ? '▶' : ''}</div>
+      </div>
+
+      <!-- Detail panel -->
+      ${hasChart ? `
+      <div id="${chartId}" class="hidden px-5 pb-4 border-t border-gray-800/50">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+          ${isNumeric && hasHistogram ? `
+          <div>
+            <div class="text-xs text-gray-500 mb-1">Distribution (${c.histogram.length} bins)</div>
+            <div style="height:120px"><canvas id="c_${chartId}"></canvas></div>
+            <div class="grid grid-cols-3 gap-1 mt-2 text-xs">
+              <div><span class="text-gray-500">Mean</span><br><span class="font-mono">${fmt(c.mean_val,2)}</span></div>
+              <div><span class="text-gray-500">Median</span><br><span class="font-mono">${fmt(c.median_val,2)}</span></div>
+              <div><span class="text-gray-500">Std</span><br><span class="font-mono">${fmt(c.std_val,2)}</span></div>
+              <div><span class="text-gray-500">Q25</span><br><span class="font-mono">${fmt(c.q25,2)}</span></div>
+              <div><span class="text-gray-500">Q75</span><br><span class="font-mono">${fmt(c.q75,2)}</span></div>
+              ${c.outlier_count > 0 ? `<div><span class="text-yellow-500">Outliers</span><br><span class="font-mono">${fmtN(c.outlier_count)} (${fmt(c.outlier_pct)}%)</span></div>` : ''}
+            </div>
+          </div>` : ''}
+          ${hasTopValues ? `
+          <div>
+            <div class="text-xs text-gray-500 mb-1">Top Values</div>
+            <div style="height:${Math.min(160, c.top_values.length*22+20)}px"><canvas id="tv_${chartId}"></canvas></div>
+          </div>` : ''}
+          ${isDate ? `
+          <div class="text-xs space-y-1">
+            <div class="text-gray-500 font-medium">Date Range</div>
+            <div><span class="text-gray-500">Min:</span> <span class="font-mono">${esc(String(c.min_date))}</span></div>
+            <div><span class="text-gray-500">Max:</span> <span class="font-mono">${esc(String(c.max_date))}</span></div>
+          </div>` : ''}
+          ${c.min_length != null ? `
+          <div class="text-xs space-y-1">
+            <div class="text-gray-500 font-medium">String Length</div>
+            <div><span class="text-gray-500">Min:</span> ${c.min_length} · <span class="text-gray-500">Max:</span> ${c.max_length} · <span class="text-gray-500">Avg:</span> ${fmt(c.avg_length,1)}</div>
+          </div>` : ''}
+        </div>
+      </div>` : ''}
+    </div>`;
+}
+
+function toggleColDetail(id) {
+  const panel = document.getElementById(id);
+  if (!panel) return;
+  const wasHidden = panel.classList.toggle('hidden');
+  if (!wasHidden) drawCharts(id);
+}
+
+function toggleCard(ti) {
+  const body = document.getElementById('cardBody_' + ti);
+  const ch = document.getElementById('chevron_' + ti);
+  const hidden = body.classList.toggle('hidden');
+  ch.textContent = hidden ? '▶' : '▼';
+}
+
+// Chart rendering
+const chartInstances = {};
+
+function drawCharts(panelId) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  // Find the table and column by matching panel id pattern chart_{tableName}_{colIdx}
+  const parts = panelId.split('_');
+  // panelId format: "chart_{tableName}_{ti}_{ci}"
+  // We need to find the right column data
+  // We stored column data with data attributes - let's re-find from the column index
+  const col = panel._colData;
+  if (!col) return;
+
+  const cId = 'c_' + panelId;
+  const tvId = 'tv_' + panelId;
+
+  if (col.histogram && col.histogram.length > 0 && document.getElementById(cId) && !chartInstances[cId]) {
+    const isDark = document.documentElement.classList.contains('dark');
+    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+    chartInstances[cId] = new Chart(document.getElementById(cId), {
+      type: 'bar',
+      data: {
+        labels: col.histogram.map(b => String(b.bin)),
+        datasets: [{ data: col.histogram.map(b => b.count), backgroundColor: '#7c3aed99', borderColor: '#7c3aed', borderWidth: 1 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{maxRotation:45,font:{size:9}},grid:{color:gridColor}},y:{ticks:{font:{size:9}},grid:{color:gridColor}}} }
+    });
+  }
+  if (col.top_values && col.top_values.length > 0 && document.getElementById(tvId) && !chartInstances[tvId]) {
+    const isDark = document.documentElement.classList.contains('dark');
+    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+    const vals = col.top_values.slice(0, 10);
+    chartInstances[tvId] = new Chart(document.getElementById(tvId), {
+      type: 'bar',
+      data: {
+        labels: vals.map(v => String(v.value).substring(0,20)),
+        datasets: [{ data: vals.map(v => v.count), backgroundColor: '#6366f199', borderColor: '#6366f1', borderWidth: 1 }]
+      },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{font:{size:9}},grid:{color:gridColor}},y:{ticks:{font:{size:9}},grid:{color:gridColor}}} }
+    });
+  }
+}
+
+function drawTrendChart(canvasId, trendData) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !trendData || !trendData.by_period) return;
+  const isDark = document.documentElement.classList.contains('dark');
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: trendData.by_period.map(d => d.period),
+      datasets: [{ data: trendData.by_period.map(d => d.count), borderColor:'#7c3aed', backgroundColor:'rgba(124,58,237,0.1)', fill:true, tension:0.3, pointRadius:2 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{maxRotation:45,font:{size:9}},grid:{color:gridColor}},y:{ticks:{font:{size:9}},grid:{color:gridColor}}} }
+  });
+}
+
+// Table filter
+document.getElementById('tableSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.table-card').forEach(card => {
+    card.style.display = !q || card.dataset.name.includes(q) ? '' : 'none';
+  });
+});
+
+// After render, attach _colData to each detail panel
+function attachColData() {
+  tables.forEach((t, ti) => {
+    t.columns.forEach((c, ci) => {
+      const panelId = 'chart_' + t.name + '_' + ti + '_' + ci;
+      const panel = document.getElementById(panelId);
+      if (panel) panel._colData = c;
+    });
+  });
+}
+
+// Re-render with correct chart IDs
+function renderTablesFixed() {
+  const container = document.getElementById('tablesContainer');
+  container.innerHTML = '';
+  tables.forEach((t, ti) => {
+    const issues = (t.issues||[]);
+    const fkViols = (t.fk_integrity||[]).filter(f => f.status==='violation');
+    const hasTrend = t.trend_data && t.trend_data.by_period && t.trend_data.by_period.length > 1;
+    const trendChartId = 'trend_' + ti;
+    const qColor = qualityColor(t.quality_score);
+
+    const card = document.createElement('div');
+    card.className = 'card rounded-xl border overflow-hidden table-card';
+    card.dataset.name = t.name.toLowerCase();
+    card.id = 'tbl_' + ti;
+
+    let colsHtml = t.columns.map((c, ci) => {
+      const chartId = 'chart_' + t.name + '_' + ti + '_' + ci;
+      const hasHistogram = c.histogram && c.histogram.length > 0;
+      const hasTopValues = c.top_values && c.top_values.length > 0;
+      const isDate = c.min_date || c.max_date;
+      const hasChart = hasHistogram || hasTopValues || isDate;
+      const piiTag = c.pii_detected ? `<span class="pii-badge">🔒 ${esc(c.pii_detected)}</span>` : '';
+      const patternTag = c.detected_pattern ? `<span class="pattern-badge">${esc(c.detected_pattern)}</span>` : '';
+      const outlierTag = (c.outlier_count > 0) ? `<span class="outlier-badge">⚡ ${fmtN(c.outlier_count)} outliers</span>` : '';
+      const nullColor = c.null_pct > 50 ? '#ef4444' : c.null_pct > 20 ? '#f59e0b' : '#22c55e';
+      const distColor = c.distinct_pct > 90 ? '#6366f1' : '#7c3aed';
+
+      return `<div class="border-b border-gray-800/50">
+        <div class="px-5 py-3 flex items-start gap-3 cursor-pointer hover:bg-gray-800/30 transition-colors" onclick="toggleColDetail2('${chartId}')">
+          <div class="w-6 text-xs text-gray-600 pt-0.5 shrink-0">${ci+1}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1 flex-wrap">
+              <span class="font-mono text-sm font-medium">${esc(c.name)}</span>
+              <span class="text-xs text-blue-300 font-mono">${esc(c.dtype)}</span>
+              ${c.is_unique?'<span class="text-xs text-purple-400">unique</span>':''}
+              ${c.is_constant?'<span class="text-xs text-yellow-400">constant</span>':''}
+              ${piiTag}${patternTag}${outlierTag}
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-1.5">
+              <div><div class="text-xs text-gray-500">Null ${fmt(c.null_pct)}%</div>${sparkBar(c.null_pct, nullColor)}</div>
+              <div><div class="text-xs text-gray-500">Distinct ${fmt(c.distinct_pct)}%</div>${sparkBar(c.distinct_pct, distColor)}</div>
+              ${c.min_val!=null?`<div class="text-xs"><span class="text-gray-500">Min </span><span class="font-mono">${esc(String(c.min_val))}</span></div>`:''}
+              ${c.max_val!=null?`<div class="text-xs"><span class="text-gray-500">Max </span><span class="font-mono">${esc(String(c.max_val))}</span></div>`:''}
+            </div>
+          </div>
+          ${hasChart ? '<div class="text-xs text-gray-600 shrink-0 pt-0.5">▶</div>' : ''}
+        </div>
+        ${hasChart ? `<div id="${chartId}" class="hidden px-5 pb-4 pt-3 border-t border-gray-800/50 bg-gray-900/30">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${hasHistogram ? `<div>
+              <div class="text-xs text-gray-500 mb-1">Distribution</div>
+              <div style="height:120px"><canvas id="c_${chartId}"></canvas></div>
+              <div class="grid grid-cols-3 gap-1 mt-2 text-xs text-center">
+                <div><div class="text-gray-500">Mean</div><div class="font-mono">${fmt(c.mean_val,2)}</div></div>
+                <div><div class="text-gray-500">Median</div><div class="font-mono">${fmt(c.median_val,2)}</div></div>
+                <div><div class="text-gray-500">Std</div><div class="font-mono">${fmt(c.std_val,2)}</div></div>
+                <div><div class="text-gray-500">Q25</div><div class="font-mono">${fmt(c.q25,2)}</div></div>
+                <div><div class="text-gray-500">Q75</div><div class="font-mono">${fmt(c.q75,2)}</div></div>
+                ${c.outlier_count>0?`<div><div class="text-yellow-500">Outliers</div><div class="font-mono">${fmtN(c.outlier_count)}</div></div>`:''}
+              </div>
+            </div>` : ''}
+            ${hasTopValues ? `<div>
+              <div class="text-xs text-gray-500 mb-1">Top Values</div>
+              <div style="height:${Math.min(160, (c.top_values||[]).length*20+20)}px"><canvas id="tv_${chartId}"></canvas></div>
+            </div>` : ''}
+            ${isDate ? `<div class="text-xs space-y-1"><div class="text-gray-500 font-medium">Date Range</div><div><span class="text-gray-500">Min: </span><span class="font-mono">${esc(String(c.min_date))}</span></div><div><span class="text-gray-500">Max: </span><span class="font-mono">${esc(String(c.max_date))}</span></div></div>` : ''}
+            ${c.min_length!=null?`<div class="text-xs space-y-1"><div class="text-gray-500 font-medium">String Length</div><div>Min: ${c.min_length} · Max: ${c.max_length} · Avg: ${fmt(c.avg_length,1)}</div></div>`:''}
+          </div>
+        </div>` : ''}
+      </div>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="px-5 py-4 border-b border-gray-800 flex items-start gap-4" style="background:linear-gradient(135deg,${qColor}11,transparent)">
+        <div>${gaugeSvg(t.quality_score)}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-lg font-bold font-mono">${esc(t.name)}</h2>
+            ${issues.length?`<span class="text-xs bg-red-900/40 text-red-300 px-2 py-0.5 rounded">${issues.length} issue${issues.length>1?'s':''}</span>`:''}
+            ${fkViols.length?`<span class="text-xs bg-orange-900/40 text-orange-300 px-2 py-0.5 rounded">⚠ ${fkViols.length} FK violation${fkViols.length>1?'s':''}</span>`:''}
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2 text-sm">
+            <div><span class="text-gray-500 text-xs">Rows</span><div class="font-semibold">${fmtN(t.row_count)}</div></div>
+            <div><span class="text-gray-500 text-xs">Sampled</span><div class="font-semibold">${fmtN(t.sampled_rows)}</div></div>
+            <div><span class="text-gray-500 text-xs">Null Rate</span><div class="font-semibold">${fmt(t.null_pct)}%</div></div>
+            <div><span class="text-gray-500 text-xs">Dup Rate</span><div class="font-semibold">${fmt(t.duplicate_pct)}%</div></div>
+          </div>
+        </div>
+        <button onclick="toggleCard(${ti})" class="shrink-0 text-gray-400 hover:text-gray-200 text-lg" id="chevron_${ti}">▼</button>
+      </div>
+      ${issues.length?`<div class="px-5 py-2 border-b border-gray-800 bg-red-950/20"><div class="text-xs font-medium text-red-400 mb-1">⚠ Quality Issues</div><ul class="list-disc list-inside space-y-0.5">${issues.map(i=>`<li class="text-xs text-red-300">${esc(i)}</li>`).join('')}</ul></div>`:''}
+      <div id="cardBody_${ti}">
+        ${hasTrend?`<div class="px-5 py-4 border-b border-gray-800"><div class="text-xs font-medium text-gray-400 mb-2">📈 Row Trend – ${esc(t.trend_data.column)}${t.trend_data.is_sampled?' <span class="text-yellow-500">[sampled]</span>':''}</div><div style="height:120px"><canvas id="${trendChartId}"></canvas></div></div>`:''}
+        ${(t.fk_integrity||[]).length?`<div class="px-5 py-3 border-b border-gray-800"><div class="text-xs font-medium text-gray-400 mb-2">🔗 FK Integrity</div><div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="th"><th class="px-2 py-1.5 text-left font-medium">Local</th><th class="px-2 py-1.5 text-left font-medium">→ References</th><th class="px-2 py-1.5 text-right font-medium">Orphans</th><th class="px-2 py-1.5 text-left font-medium">Status</th></tr></thead><tbody>${(t.fk_integrity||[]).map(f=>`<tr class="border-b border-gray-800/50"><td class="px-2 py-1.5 font-mono">${esc(f.local_col)}</td><td class="px-2 py-1.5 font-mono text-blue-300">${esc(f.ref_table)}.${esc(f.ref_col)}</td><td class="px-2 py-1.5 text-right ${f.status==='ok'?'text-green-400':f.status==='violation'?'text-red-400':'text-yellow-400'}">${f.orphan_count>=0?fmtN(f.orphan_count):'err'}</td><td class="px-2 py-1.5 font-medium ${f.status==='ok'?'text-green-400':f.status==='violation'?'text-red-400':'text-yellow-400'}">${esc(f.status)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
+        <div class="divide-y divide-gray-800/50">${colsHtml}</div>
+      </div>`;
+
+    container.appendChild(card);
+    if (hasTrend) setTimeout(() => drawTrendChart(trendChartId, t.trend_data), 50);
+  });
+}
+
+function toggleColDetail2(chartId) {
+  const panel = document.getElementById(chartId);
+  if (!panel) return;
+  const wasHidden = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !wasHidden);
+  const btn = panel.previousElementSibling.querySelector('div:last-child');
+  if (btn) btn.textContent = wasHidden ? '▼' : '▶';
+  if (wasHidden) {
+    // Find col data by chartId pattern: chart_{tableName}_{ti}_{ci}
+    const parts = chartId.split('_');
+    const ci = parseInt(parts[parts.length-1]);
+    const ti = parseInt(parts[parts.length-2]);
+    const col = tables[ti] && tables[ti].columns[ci];
+    if (!col) return;
+    const cId = 'c_' + chartId;
+    const tvId = 'tv_' + chartId;
+    const isDark = document.documentElement.classList.contains('dark');
+    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+    if (col.histogram && col.histogram.length > 0 && document.getElementById(cId) && !chartInstances[cId]) {
+      chartInstances[cId] = new Chart(document.getElementById(cId), {
+        type:'bar',
+        data:{labels:col.histogram.map(b=>String(b.bin)),datasets:[{data:col.histogram.map(b=>b.count),backgroundColor:'#7c3aed99',borderColor:'#7c3aed',borderWidth:1}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{maxRotation:45,font:{size:9}},grid:{color:gridColor}},y:{ticks:{font:{size:9}},grid:{color:gridColor}}}}
+      });
+    }
+    if (col.top_values && col.top_values.length > 0 && document.getElementById(tvId) && !chartInstances[tvId]) {
+      const vals = col.top_values.slice(0,10);
+      chartInstances[tvId] = new Chart(document.getElementById(tvId), {
+        type:'bar',
+        data:{labels:vals.map(v=>String(v.value).substring(0,20)),datasets:[{data:vals.map(v=>v.count),backgroundColor:'#6366f199',borderColor:'#6366f1',borderWidth:1}]},
+        options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9}},grid:{color:gridColor}},y:{ticks:{font:{size:9}},grid:{color:gridColor}}}}
+      });
+    }
+  }
+}
+
+renderTablesFixed();
+</script>
+</body>
+</html>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Data Dictionary – chinook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: { extend: { fontFamily: { sans: ['Inter','sans-serif'], mono: ['JetBrains Mono','monospace'] } } }
+}
+</script>
+<style>
+:root { --bg:#0a0e1a; --card:#111827; --border:#1f2937; --accent:#7c3aed; --accent2:#6366f1; }
+.dark body { background:#0a0e1a; color:#e5e7eb; }
+.light body { background:#f3f4f6; color:#111827; }
+.dark .card { background:#111827; border-color:#1f2937; }
+.light .card { background:#ffffff; border-color:#e5e7eb; }
+.dark .sidebar { background:#0d1117; border-color:#1f2937; }
+.light .sidebar { background:#f9fafb; border-color:#e5e7eb; }
+.dark .th { background:#1f2937; color:#9ca3af; }
+.light .th { background:#f3f4f6; color:#6b7280; }
+.dark .tr-hover:hover { background:#1f2937; }
+.light .tr-hover:hover { background:#f9fafb; }
+.dark .inp { background:#1f2937; border-color:#374151; color:#e5e7eb; }
+.light .inp { background:#fff; border-color:#d1d5db; color:#111827; }
+.dark .tag { background:#1e1b4b; color:#a5b4fc; }
+.light .tag { background:#ede9fe; color:#4f46e5; }
+.dark .code-block { background:#0d1117; }
+.light .code-block { background:#f8fafc; border:1px solid #e2e8f0; }
+.pii-badge { background:#7f1d1d; color:#fca5a5; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.pk-badge  { background:#78350f; color:#fcd34d; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.fk-badge  { background:#1e3a5f; color:#93c5fd; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.nn-badge  { background:#1c2b1c; color:#86efac; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.idx-badge { background:#2d1b4e; color:#c4b5fd; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.warn-badge { background:#451a03; color:#fdba74; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.type-badge { font-size:0.65rem; padding:1px 8px; border-radius:9999px; font-weight:600; }
+.lineage-tag { background:#0c2a1e; color:#6ee7b7; font-size:0.6rem; padding:1px 5px; border-radius:4px; }
+.dark .lineage-tag { background:#0c2a1e; color:#6ee7b7; }
+.light .lineage-tag { background:#d1fae5; color:#065f46; }
+.active-table { border-left: 3px solid #7c3aed !important; }
+.scroll-area { height: calc(100vh - 120px); overflow-y: auto; }
+/* adaptive helpers */
+.dark .bdr{border-color:#1f2937}.light .bdr{border-color:#e5e7eb}
+.dark .txt-h{color:#e5e7eb}.light .txt-h{color:#111827}
+.dark .btn-s{background:#374151;color:#d1d5db}.light .btn-s{background:#f1f5f9;color:#374151;border:1px solid #d1d5db}
+.dark .btn-s:hover{background:#4b5563}.light .btn-s:hover{background:#e2e8f0}
+.dark .sb-hover:hover{background:#1f2937}.light .sb-hover:hover{background:#f1f5f9}
+.dark .sect-hover:hover{background:rgba(31,41,55,0.5)}.light .sect-hover:hover{background:rgba(243,244,246,0.8)}
+.dark .llm-d{background:rgba(76,29,149,0.12);color:#d1d5db}.light .llm-d{background:rgba(237,233,254,0.4);color:#374151}
+.scroll-area::-webkit-scrollbar { width:4px; }
+.scroll-area::-webkit-scrollbar-track { background:transparent; }
+.scroll-area::-webkit-scrollbar-thumb { background:#374151; border-radius:2px; }
+.tooltip { position:relative; }
+.tooltip:hover::after { content:attr(data-tip); position:absolute; bottom:110%; left:50%; transform:translateX(-50%); background:#111827; color:#e5e7eb; font-size:0.7rem; padding:3px 8px; border-radius:4px; white-space:nowrap; z-index:50; pointer-events:none; }
+@media print {
+  .no-print { display:none !important; }
+  .main-content { margin-left:0 !important; }
+  body { background:white !important; color:black !important; }
+}
+</style>
+</head>
+<body class="font-sans transition-colors duration-200">
+<div id="app" class="flex h-screen overflow-hidden">
+
+<!-- Sidebar -->
+<aside class="sidebar no-print fixed left-0 top-0 h-full w-72 border-r flex flex-col z-30 transition-colors duration-200">
+  <div class="p-4 border-b border-inherit">
+    <div class="flex items-center justify-between mb-1">
+      <a href="index.html" class="text-xs text-purple-400 hover:text-purple-300">← Back to Index</a>
+      <div class="flex gap-2">
+        <button onclick="printPage()" class="tooltip text-gray-400 hover:text-gray-200 text-sm" data-tip="Print / PDF">🖨️</button>
+        <button onclick="toggleTheme()" id="themeBtn" class="tooltip text-gray-400 hover:text-gray-200 text-sm" data-tip="Toggle theme">🌙</button>
+      </div>
+    </div>
+    <h1 class="font-bold text-base truncate" title="chinook">chinook</h1>
+    <p class="text-xs text-gray-500 mt-0.5">Data Dictionary</p>
+  </div>
+  <div class="p-3 border-b border-inherit">
+    <div class="relative">
+      <input id="sidebarSearch" type="text" placeholder="Search tables… ( / )"
+        class="inp w-full rounded-md px-3 py-1.5 text-sm pr-8 focus:outline-none focus:ring-1 focus:ring-purple-500"/>
+      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">↵</span>
+    </div>
+    <div class="flex gap-1 mt-2 flex-wrap" id="typeFilters">
+      <button onclick="filterType('')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-purple-700 text-white" data-type="">All</button>
+      <button onclick="filterType('fact')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="fact">Fact</button>
+      <button onclick="filterType('dimension')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="dimension">Dim</button>
+      <button onclick="filterType('lookup')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="lookup">Lookup</button>
+      <button onclick="filterType('junction')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="junction">Junction</button>
+    </div>
+  </div>
+  <div class="scroll-area flex-1 p-2" id="tableList"></div>
+  <div class="p-3 border-t border-inherit text-xs text-gray-500">
+    <div id="tableCount"></div>
+    <div class="mt-1 text-gray-600 text-xs">j/k navigate · / search · Esc clear</div>
+  </div>
+</aside>
+
+<!-- Main content -->
+<main class="main-content ml-72 flex-1 overflow-y-auto scroll-area" id="mainContent">
+  <div class="sticky top-0 z-20 border-b bdr px-6 py-3 flex items-center justify-between no-print" style="background:inherit">
+    <div class="flex gap-4 text-sm">
+      <a href="data_profiling.html" class="text-blue-400 hover:text-blue-300">📊 Profiling</a>
+      <a href="erd.html" class="text-purple-400 hover:text-purple-300">🗺 ERD</a>
+    </div>
+    <div class="flex items-center gap-3">
+      <input id="colSearch" type="text" placeholder="Search columns…"
+        class="inp rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 w-48"/>
+      <span class="text-xs text-gray-500" id="genAt">2026-03-14</span>
+    </div>
+  </div>
+  <div class="p-6 space-y-8" id="tablesContainer"></div>
+</main>
+
+</div><!-- #app -->
+
+<script>
+const RAW = {"db_name": "chinook", "generated_at": "2026-03-14T08:09:53.648004+00:00", "total_tables": 11, "total_columns": 64, "total_rows": 15607, "tables": [{"name": "album", "schema": null, "row_count": 347, "comment": null, "llm_description": "The \"album\" table stores information about music albums in a production database, with each row representing a unique album identified by its album_id. The title column provides the name of the album, while the artist_id column links each album to a specific artist in the database, facilitating relationships between albums and their creators. This structure supports functionalities such as cataloging albums, retrieving album details, and analyzing artist discographies. Overall, the table serves as a foundational component for managing and querying music album data within the system.", "llm_confidence": 90, "table_type": "unknown", "primary_keys": ["album_id"], "foreign_keys": [{"name": "album_artist_id_fkey", "constrained_columns": ["artist_id"], "referred_table": "artist", "referred_columns": ["artist_id"], "label": "artist_id \u2192 artist.artist_id"}], "indexes": [{"name": "album_artist_id_idx", "columns": ["artist_id"], "unique": false}], "fk_integrity": [{"fk_name": "album_artist_id_fkey", "local_col": "artist_id", "ref_table": "artist", "ref_col": "artist_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"album_id": 1, "title": "For Those About To Rock We Salute You", "artist_id": 1}, {"album_id": 2, "title": "Balls to the Wall", "artist_id": 2}, {"album_id": 3, "title": "Restless and Wild", "artist_id": 2}, {"album_id": 4, "title": "Let There Be Rock", "artist_id": 1}, {"album_id": 5, "title": "Big Ones", "artist_id": 3}], "columns": [{"name": "album_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each album, ranging from 1 to 347, ensuring all values are unique", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "title", "type": "VARCHAR(160)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The name of the album, which is always unique and required, with a maximum length of 160 characters", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "artist_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "artist.artist_id", "comment": null, "llm_description": "Identifier linking to the artist of the album, referencing the artist's unique ID from the artist table, with 204 distinct values indicating a diverse set of artists", "llm_confidence": 90, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}]}, {"name": "artist", "schema": null, "row_count": 275, "comment": null, "llm_description": "The artist table serves as a reference for storing information about individual artists, identified uniquely by their artist_id. Each entry includes the artist's name, allowing for easy retrieval and association with other data in the database, such as albums or tracks. This lookup table is essential for maintaining data integrity and ensuring that artist-related information is consistent across the system. It supports various business operations, including music cataloging, reporting, and user interfaces that display artist details.", "llm_confidence": 90, "table_type": "lookup", "primary_keys": ["artist_id"], "foreign_keys": [], "indexes": [], "fk_integrity": [], "sample_data": [{"artist_id": 1, "name": "AC/DC"}, {"artist_id": 2, "name": "Accept"}, {"artist_id": 3, "name": "Aerosmith"}, {"artist_id": 4, "name": "Alanis Morissette"}, {"artist_id": 5, "name": "Alice In Chains"}], "columns": [{"name": "artist_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each artist, ranging from 1 to 275, ensuring all values are unique", "llm_confidence": 98, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "name", "type": "VARCHAR(120)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The unique name of the artist, which is always populated and serves as a key identifier", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "customer", "schema": null, "row_count": 59, "comment": null, "llm_description": "The customer table stores detailed information about individuals or organizations that engage with the business, serving as a key reference for customer-related operations. It includes personal identifiers such as names and contact details, as well as demographic information like address and location. This table is essential for managing customer relationships, facilitating communication, and supporting sales and marketing efforts. However, it is important to note that certain columns, such as 'company' and 'fax', have high null rates, which may affect the completeness of the data.", "llm_confidence": 75, "table_type": "dimension", "primary_keys": ["customer_id"], "foreign_keys": [{"name": "customer_support_rep_id_fkey", "constrained_columns": ["support_rep_id"], "referred_table": "employee", "referred_columns": ["employee_id"], "label": "support_rep_id \u2192 employee.employee_id"}], "indexes": [{"name": "customer_support_rep_id_idx", "columns": ["support_rep_id"], "unique": false}], "fk_integrity": [{"fk_name": "customer_support_rep_id_fkey", "local_col": "support_rep_id", "ref_table": "employee", "ref_col": "employee_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"customer_id": 1, "first_name": "Lu\u00eds", "last_name": "Gon\u00e7alves", "company": "Embraer - Empresa Brasileira de Aeron\u00e1utica S.A.", "address": "Av. Brigadeiro Faria Lima, 2170", "city": "S\u00e3o Jos\u00e9 dos Campos", "state": "SP", "country": "Brazil", "postal_code": "12227-000", "phone": "+55 (12) 3923-5555", "fax": "+55 (12) 3923-5566", "email": "luisg@embraer.com.br", "support_rep_id": 3}, {"customer_id": 2, "first_name": "Leonie", "last_name": "K\u00f6hler", "company": null, "address": "Theodor-Heuss-Stra\u00dfe 34", "city": "Stuttgart", "state": null, "country": "Germany", "postal_code": "70174", "phone": "+49 0711 2842222", "fax": null, "email": "leonekohler@surfeu.de", "support_rep_id": 5}, {"customer_id": 3, "first_name": "Fran\u00e7ois", "last_name": "Tremblay", "company": null, "address": "1498 rue B\u00e9langer", "city": "Montr\u00e9al", "state": "QC", "country": "Canada", "postal_code": "H2G 1A7", "phone": "+1 (514) 721-4711", "fax": null, "email": "ftremblay@gmail.com", "support_rep_id": 3}, {"customer_id": 4, "first_name": "Bj\u00f8rn", "last_name": "Hansen", "company": null, "address": "Ullev\u00e5lsveien 14", "city": "Oslo", "state": null, "country": "Norway", "postal_code": "0171", "phone": "+47 22 44 22 22", "fax": null, "email": "bjorn.hansen@yahoo.no", "support_rep_id": 4}, {"customer_id": 5, "first_name": "Franti\u0161ek", "last_name": "Wichterlov\u00e1", "company": "JetBrains s.r.o.", "address": "Klanova 9/506", "city": "Prague", "state": null, "country": "Czech Republic", "postal_code": "14700", "phone": "+420 2 4172 5555", "fax": "+420 2 4172 5555", "email": "frantisekw@jetbrains.com", "support_rep_id": 4}], "columns": [{"name": "customer_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each customer", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "first_name", "type": "VARCHAR(40)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Given name of the customer, often used for personalization", "llm_confidence": 95, "pii_type": "Person Name", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "last_name", "type": "VARCHAR(20)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Surname of the customer, used for identification and personalization", "llm_confidence": 95, "pii_type": "Person Name", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "company", "type": "VARCHAR(80)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Name of the company associated with the customer, often absent", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "address", "type": "VARCHAR(70)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique physical address of the customer, essential for shipping and contact", "llm_confidence": 97, "pii_type": "Address", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "city", "type": "VARCHAR(40)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "City where the customer resides, important for regional identification", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "state", "type": "VARCHAR(40)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "State or province of the customer's address, often used for regional categorization", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": ["status"], "naming_issue": null}, {"name": "country", "type": "VARCHAR(40)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Country of the customer, crucial for international operations and compliance", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "postal_code", "type": "VARCHAR(10)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Postal code of the customer's address, used for accurate mail delivery", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": ["natural_key"], "naming_issue": null}, {"name": "phone", "type": "VARCHAR(24)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Primary contact number for the customer, necessary for communication", "llm_confidence": 90, "pii_type": "Phone", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "fax", "type": "VARCHAR(24)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Secondary contact number for the customer, often used for document transmission", "llm_confidence": 60, "pii_type": "Phone", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "email", "type": "VARCHAR(60)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique email address of the customer, essential for digital communication", "llm_confidence": 97, "pii_type": "Email", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "support_rep_id", "type": "INTEGER", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "employee.employee_id", "comment": null, "llm_description": "Identifier for the employee assigned to support the customer, linking to the employee entity", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}]}, {"name": "employee", "schema": null, "row_count": 8, "comment": null, "llm_description": "The employee table stores detailed information about the organization's workforce, including personal identifiers such as names, contact information, and employment details like job titles and reporting structure. It serves as a dimension table that supports various analytical queries related to employee demographics and organizational hierarchy. The data captured in this table is essential for HR management, payroll processing, and performance evaluations. However, it is important to note that certain columns may contain sensitive information, such as phone numbers, which should be handled with care.", "llm_confidence": 85, "table_type": "dimension", "primary_keys": ["employee_id"], "foreign_keys": [{"name": "employee_reports_to_fkey", "constrained_columns": ["reports_to"], "referred_table": "employee", "referred_columns": ["employee_id"], "label": "reports_to \u2192 employee.employee_id"}], "indexes": [{"name": "employee_reports_to_idx", "columns": ["reports_to"], "unique": false}], "fk_integrity": [{"fk_name": "employee_reports_to_fkey", "local_col": "reports_to", "ref_table": "employee", "ref_col": "employee_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"employee_id": 1, "last_name": "Adams", "first_name": "Andrew", "title": "General Manager", "reports_to": null, "birth_date": "1962-02-18T00:00:00", "hire_date": "2002-08-14T00:00:00", "address": "11120 Jasper Ave NW", "city": "Edmonton", "state": "AB", "country": "Canada", "postal_code": "T5K 2N1", "phone": "+1 (780) 428-9482", "fax": "+1 (780) 428-3457", "email": "andrew@chinookcorp.com"}, {"employee_id": 2, "last_name": "Edwards", "first_name": "Nancy", "title": "Sales Manager", "reports_to": 1, "birth_date": "1958-12-08T00:00:00", "hire_date": "2002-05-01T00:00:00", "address": "825 8 Ave SW", "city": "Calgary", "state": "AB", "country": "Canada", "postal_code": "T2P 2T3", "phone": "+1 (403) 262-3443", "fax": "+1 (403) 262-3322", "email": "nancy@chinookcorp.com"}, {"employee_id": 3, "last_name": "Peacock", "first_name": "Jane", "title": "Sales Support Agent", "reports_to": 2, "birth_date": "1973-08-29T00:00:00", "hire_date": "2002-04-01T00:00:00", "address": "1111 6 Ave SW", "city": "Calgary", "state": "AB", "country": "Canada", "postal_code": "T2P 5M5", "phone": "+1 (403) 262-3443", "fax": "+1 (403) 262-6712", "email": "jane@chinookcorp.com"}, {"employee_id": 4, "last_name": "Park", "first_name": "Margaret", "title": "Sales Support Agent", "reports_to": 2, "birth_date": "1947-09-19T00:00:00", "hire_date": "2003-05-03T00:00:00", "address": "683 10 Street SW", "city": "Calgary", "state": "AB", "country": "Canada", "postal_code": "T2P 5G3", "phone": "+1 (403) 263-4423", "fax": "+1 (403) 263-4289", "email": "margaret@chinookcorp.com"}, {"employee_id": 5, "last_name": "Johnson", "first_name": "Steve", "title": "Sales Support Agent", "reports_to": 2, "birth_date": "1965-03-03T00:00:00", "hire_date": "2003-10-17T00:00:00", "address": "7727B 41 Ave", "city": "Calgary", "state": "AB", "country": "Canada", "postal_code": "T3B 1Y7", "phone": "1 (780) 836-9987", "fax": "1 (780) 836-9543", "email": "steve@chinookcorp.com"}], "columns": [{"name": "employee_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each employee in the organization", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "last_name", "type": "VARCHAR(20)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The last name of the employee, which is a unique identifier", "llm_confidence": 95, "pii_type": "Person Name", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "first_name", "type": "VARCHAR(20)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The first name of the employee, which is a unique identifier", "llm_confidence": 95, "pii_type": "Person Name", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "title", "type": "VARCHAR(30)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The job title of the employee, which can be one of five distinct roles: 'Sales Support Agent', 'IT Staff', 'General Manager', 'Sales Manager', or 'IT Manager'", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "reports_to", "type": "INTEGER", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "employee.employee_id", "comment": null, "llm_description": "The employee ID of the employee's direct supervisor, linking to another employee in the organization", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "birth_date", "type": "TIMESTAMP", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The birth date of the employee, which is a unique identifier and falls within the range of 1947 to 1973", "llm_confidence": 95, "pii_type": "Date of Birth", "pii_detected": null, "lineage_tags": ["temporal"], "naming_issue": null}, {"name": "hire_date", "type": "TIMESTAMP", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The date when the employee was hired, with distinct values indicating the years 2002 to 2004", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": ["temporal"], "naming_issue": null}, {"name": "address", "type": "VARCHAR(70)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The unique residential address of the employee, which is a unique identifier", "llm_confidence": 95, "pii_type": "Address", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "city", "type": "VARCHAR(40)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The city where the employee resides, with three possible values: 'Calgary', 'Lethbridge', or 'Edmonton'", "llm_confidence": 80, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "state", "type": "VARCHAR(40)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The state where the employee resides, which is always 'AB' for Alberta", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["status"], "naming_issue": null}, {"name": "country", "type": "VARCHAR(40)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The country where the employee resides, which is always 'Canada'", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "postal_code", "type": "VARCHAR(10)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The unique postal code for the employee's address, serving as a unique identifier", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["natural_key"], "naming_issue": null}, {"name": "phone", "type": "VARCHAR(24)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The phone number of the employee, which follows a specific pattern and has seven distinct values", "llm_confidence": 80, "pii_type": "Phone", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "fax", "type": "VARCHAR(24)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The fax number of the employee, which is a unique identifier and follows a specific pattern", "llm_confidence": 95, "pii_type": "Phone", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "email", "type": "VARCHAR(60)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The email address of the employee, which is a unique identifier and follows a specific email pattern", "llm_confidence": 95, "pii_type": "Email", "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "genre", "schema": null, "row_count": 25, "comment": null, "llm_description": "The genre table serves as a reference for categorizing various types of content, likely within a media or entertainment context, such as movies, music, or books. It contains a unique identifier for each genre (genre_id) and a descriptive name (name) that specifies the genre type, such as \"Action,\" \"Comedy,\" or \"Drama.\" This structured classification allows for efficient organization and retrieval of content based on genre, facilitating better user experiences and content management. Overall, the genre table plays a crucial role in enhancing the discoverability of content by enabling filtering and sorting based on genre classifications.", "llm_confidence": 90, "table_type": "lookup", "primary_keys": ["genre_id"], "foreign_keys": [], "indexes": [], "fk_integrity": [], "sample_data": [{"genre_id": 1, "name": "Rock"}, {"genre_id": 2, "name": "Jazz"}, {"genre_id": 3, "name": "Metal"}, {"genre_id": 4, "name": "Alternative & Punk"}, {"genre_id": 5, "name": "Rock And Roll"}], "columns": [{"name": "genre_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each genre, ranging from 1 to 25", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "name", "type": "VARCHAR(120)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The name of the genre, which is always unique and identifies the category of media content", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "invoice", "schema": null, "row_count": 412, "comment": null, "llm_description": "The invoice table stores detailed records of customer transactions, capturing essential information about each sale. Each entry includes a unique invoice identifier, the associated customer, and the date of the transaction, along with billing details such as address, city, state, country, and postal code. The total amount for each invoice is also recorded, allowing for financial analysis and reporting. This table serves as a critical component for tracking sales performance and customer purchasing behavior.", "llm_confidence": 95, "table_type": "fact", "primary_keys": ["invoice_id"], "foreign_keys": [{"name": "invoice_customer_id_fkey", "constrained_columns": ["customer_id"], "referred_table": "customer", "referred_columns": ["customer_id"], "label": "customer_id \u2192 customer.customer_id"}], "indexes": [{"name": "invoice_customer_id_idx", "columns": ["customer_id"], "unique": false}], "fk_integrity": [{"fk_name": "invoice_customer_id_fkey", "local_col": "customer_id", "ref_table": "customer", "ref_col": "customer_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"invoice_id": 1, "customer_id": 2, "invoice_date": "2021-01-01T00:00:00", "billing_address": "Theodor-Heuss-Stra\u00dfe 34", "billing_city": "Stuttgart", "billing_state": null, "billing_country": "Germany", "billing_postal_code": "70174", "total": "1.98"}, {"invoice_id": 2, "customer_id": 4, "invoice_date": "2021-01-02T00:00:00", "billing_address": "Ullev\u00e5lsveien 14", "billing_city": "Oslo", "billing_state": null, "billing_country": "Norway", "billing_postal_code": "0171", "total": "3.96"}, {"invoice_id": 3, "customer_id": 8, "invoice_date": "2021-01-03T00:00:00", "billing_address": "Gr\u00e9trystraat 63", "billing_city": "Brussels", "billing_state": null, "billing_country": "Belgium", "billing_postal_code": "1000", "total": "5.94"}, {"invoice_id": 4, "customer_id": 14, "invoice_date": "2021-01-06T00:00:00", "billing_address": "8210 111 ST NW", "billing_city": "Edmonton", "billing_state": "AB", "billing_country": "Canada", "billing_postal_code": "T6G 2C7", "total": "8.91"}, {"invoice_id": 5, "customer_id": 23, "invoice_date": "2021-01-11T00:00:00", "billing_address": "69 Salem Street", "billing_city": "Boston", "billing_state": "MA", "billing_country": "USA", "billing_postal_code": "2113", "total": "13.86"}], "columns": [{"name": "invoice_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each invoice, ensuring all values are unique within the range of 1 to 412", "llm_confidence": 98, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "customer_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "customer.customer_id", "comment": null, "llm_description": "Identifier linking to the customer entity, with 59 distinct customers represented", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "invoice_date", "type": "TIMESTAMP", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Timestamp indicating when the invoice was issued, spanning from January 1, 2021, to December 22, 2025", "llm_confidence": 96, "pii_type": null, "pii_detected": null, "lineage_tags": ["temporal"], "naming_issue": null}, {"name": "billing_address", "type": "VARCHAR(70)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Physical address where the invoice is billed, with common values indicating specific locations", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "billing_city", "type": "VARCHAR(40)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "City associated with the billing address, with notable cities including Prague, Berlin, and Paris", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "billing_state", "type": "VARCHAR(40)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "State associated with the billing address, with a significant number of null values and common abbreviations like CA and SP", "llm_confidence": 65, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "billing_country", "type": "VARCHAR(40)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Country associated with the billing address, predominantly featuring the USA and Canada among 24 distinct countries", "llm_confidence": 90, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "billing_postal_code", "type": "VARCHAR(10)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Postal code for the billing address, with a small percentage of nulls and various codes indicating specific regions", "llm_confidence": 75, "pii_type": null, "pii_detected": null, "lineage_tags": ["natural_key"], "naming_issue": null}, {"name": "total", "type": "NUMERIC(10, 2)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Total amount charged on the invoice, with values ranging from 0.99 to 25.86 and 23 distinct amounts", "llm_confidence": 92, "pii_type": null, "pii_detected": null, "lineage_tags": ["financial"], "naming_issue": null}]}, {"name": "invoice_line", "schema": null, "row_count": 2240, "comment": null, "llm_description": "The `invoice_line` table serves as a junction table that links individual invoices to the specific tracks being purchased, capturing the details of each line item in an invoice. Each entry in this table represents a unique combination of an invoice and a track, detailing the unit price and quantity of the track sold. The presence of a single distinct value for the `quantity` column suggests that each track is sold in a fixed amount per invoice, likely indicating a standard sale model. This structure allows for efficient tracking and management of sales transactions related to music tracks.", "llm_confidence": 85, "table_type": "junction", "primary_keys": ["invoice_line_id"], "foreign_keys": [{"name": "invoice_line_invoice_id_fkey", "constrained_columns": ["invoice_id"], "referred_table": "invoice", "referred_columns": ["invoice_id"], "label": "invoice_id \u2192 invoice.invoice_id"}, {"name": "invoice_line_track_id_fkey", "constrained_columns": ["track_id"], "referred_table": "track", "referred_columns": ["track_id"], "label": "track_id \u2192 track.track_id"}], "indexes": [{"name": "invoice_line_invoice_id_idx", "columns": ["invoice_id"], "unique": false}, {"name": "invoice_line_track_id_idx", "columns": ["track_id"], "unique": false}], "fk_integrity": [{"fk_name": "invoice_line_invoice_id_fkey", "local_col": "invoice_id", "ref_table": "invoice", "ref_col": "invoice_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "invoice_line_track_id_fkey", "local_col": "track_id", "ref_table": "track", "ref_col": "track_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"invoice_line_id": 1, "invoice_id": 1, "track_id": 2, "unit_price": "0.99", "quantity": 1}, {"invoice_line_id": 2, "invoice_id": 1, "track_id": 4, "unit_price": "0.99", "quantity": 1}, {"invoice_line_id": 3, "invoice_id": 2, "track_id": 6, "unit_price": "0.99", "quantity": 1}, {"invoice_line_id": 4, "invoice_id": 2, "track_id": 8, "unit_price": "0.99", "quantity": 1}, {"invoice_line_id": 5, "invoice_id": 2, "track_id": 10, "unit_price": "0.99", "quantity": 1}], "columns": [{"name": "invoice_line_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each invoice line item", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "invoice_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "invoice.invoice_id", "comment": null, "llm_description": "Identifier linking to the specific invoice this line item belongs to", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "track_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "track.track_id", "comment": null, "llm_description": "Identifier linking to the specific track being sold in this invoice line", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "unit_price", "type": "NUMERIC(10, 2)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Sale price per unit of the track, consistently either $0.99 or $1.99", "llm_confidence": 90, "pii_type": null, "pii_detected": null, "lineage_tags": ["financial"], "naming_issue": null}, {"name": "quantity", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Fixed quantity of tracks sold in this invoice line, which is always 1", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "media_type", "schema": null, "row_count": 5, "comment": null, "llm_description": "The `media_type` table serves as a reference for categorizing different types of media used within the system. Each entry is identified by a unique `media_type_id` and includes a descriptive `name` that specifies the type of media, such as video, audio, or image. This classification helps streamline processes related to media management, ensuring that users can easily identify and differentiate between various media formats. By maintaining a consistent set of media types, the table supports data integrity and enhances the overall user experience in media-related functionalities.", "llm_confidence": 90, "table_type": "lookup", "primary_keys": ["media_type_id"], "foreign_keys": [], "indexes": [], "fk_integrity": [], "sample_data": [{"media_type_id": 1, "name": "MPEG audio file"}, {"media_type_id": 2, "name": "Protected AAC audio file"}, {"media_type_id": 3, "name": "Protected MPEG-4 video file"}, {"media_type_id": 4, "name": "Purchased AAC audio file"}, {"media_type_id": 5, "name": "AAC audio file"}], "columns": [{"name": "media_type_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each media type, ranging from 1 to 5", "llm_confidence": 98, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "name", "type": "VARCHAR(120)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Descriptive name of the media type, which is always unique", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "playlist", "schema": null, "row_count": 18, "comment": null, "llm_description": "The `playlist` table serves as a reference for different playlists available in the system, each identified by a unique `playlist_id`. It stores the names of these playlists, which can be used to categorize or organize media content, such as songs or videos, for user access and interaction. This lookup table is essential for maintaining consistency and integrity in the application by providing a standardized list of playlists that can be referenced throughout the database. Overall, it supports the functionality of media management and user experience in the application.", "llm_confidence": 85, "table_type": "lookup", "primary_keys": ["playlist_id"], "foreign_keys": [], "indexes": [], "fk_integrity": [], "sample_data": [{"playlist_id": 1, "name": "Music"}, {"playlist_id": 2, "name": "Movies"}, {"playlist_id": 3, "name": "TV Shows"}, {"playlist_id": 4, "name": "Audiobooks"}, {"playlist_id": 5, "name": "90\u2019s Music"}], "columns": [{"name": "playlist_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each playlist, ranging from 1 to 18", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "name", "type": "VARCHAR(120)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Categorical label representing the type of content in the playlist, with distinct values such as 'Music', 'Movies', and 'TV Shows'", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "playlist_track", "schema": null, "row_count": 8715, "comment": null, "llm_description": "The `playlist_track` table serves as a junction table that establishes a many-to-many relationship between playlists and tracks in the music database. Each entry in this table links a specific playlist, identified by `playlist_id`, to a particular track, identified by `track_id`, allowing for multiple tracks to be associated with a single playlist and vice versa. This structure enables efficient management and retrieval of the tracks contained within each playlist, facilitating features such as playlist creation, modification, and playback. Overall, the `playlist_track` table is essential for organizing and maintaining the relationships between playlists and their respective tracks in the system.", "llm_confidence": 95, "table_type": "junction", "primary_keys": ["playlist_id", "track_id"], "foreign_keys": [{"name": "playlist_track_playlist_id_fkey", "constrained_columns": ["playlist_id"], "referred_table": "playlist", "referred_columns": ["playlist_id"], "label": "playlist_id \u2192 playlist.playlist_id"}, {"name": "playlist_track_track_id_fkey", "constrained_columns": ["track_id"], "referred_table": "track", "referred_columns": ["track_id"], "label": "track_id \u2192 track.track_id"}], "indexes": [{"name": "playlist_track_playlist_id_idx", "columns": ["playlist_id"], "unique": false}, {"name": "playlist_track_track_id_idx", "columns": ["track_id"], "unique": false}], "fk_integrity": [{"fk_name": "playlist_track_playlist_id_fkey", "local_col": "playlist_id", "ref_table": "playlist", "ref_col": "playlist_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "playlist_track_track_id_fkey", "local_col": "track_id", "ref_table": "track", "ref_col": "track_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"playlist_id": 1, "track_id": 3402}, {"playlist_id": 1, "track_id": 3389}, {"playlist_id": 1, "track_id": 3390}, {"playlist_id": 1, "track_id": 3391}, {"playlist_id": 1, "track_id": 3392}], "columns": [{"name": "playlist_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": true, "foreign_key_to": "playlist.playlist_id", "comment": null, "llm_description": "Identifies the specific playlist to which the track belongs, with distinct values indicating a limited set of playlists such as '1', '8', and '5'", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "track_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": true, "foreign_key_to": "track.track_id", "comment": null, "llm_description": "Identifies the individual track within the system, with a large range of distinct values indicating a diverse collection of tracks available", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}]}, {"name": "track", "schema": null, "row_count": 3503, "comment": null, "llm_description": "The \"track\" table stores detailed information about individual music tracks available in a digital music library. Each entry includes attributes such as the track's unique identifier, name, associated album, media type, genre, composer, duration in milliseconds, file size in bytes, and pricing information. This table serves as a critical component for managing and retrieving track data for applications related to music streaming, sales, or cataloging. By organizing these attributes, the table facilitates efficient querying and reporting on the music tracks offered to users.", "llm_confidence": 90, "table_type": "fact", "primary_keys": ["track_id"], "foreign_keys": [{"name": "track_album_id_fkey", "constrained_columns": ["album_id"], "referred_table": "album", "referred_columns": ["album_id"], "label": "album_id \u2192 album.album_id"}, {"name": "track_genre_id_fkey", "constrained_columns": ["genre_id"], "referred_table": "genre", "referred_columns": ["genre_id"], "label": "genre_id \u2192 genre.genre_id"}, {"name": "track_media_type_id_fkey", "constrained_columns": ["media_type_id"], "referred_table": "media_type", "referred_columns": ["media_type_id"], "label": "media_type_id \u2192 media_type.media_type_id"}], "indexes": [{"name": "track_album_id_idx", "columns": ["album_id"], "unique": false}, {"name": "track_genre_id_idx", "columns": ["genre_id"], "unique": false}, {"name": "track_media_type_id_idx", "columns": ["media_type_id"], "unique": false}], "fk_integrity": [{"fk_name": "track_album_id_fkey", "local_col": "album_id", "ref_table": "album", "ref_col": "album_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "track_genre_id_fkey", "local_col": "genre_id", "ref_table": "genre", "ref_col": "genre_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "track_media_type_id_fkey", "local_col": "media_type_id", "ref_table": "media_type", "ref_col": "media_type_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"track_id": 1, "name": "For Those About To Rock (We Salute You)", "album_id": 1, "media_type_id": 1, "genre_id": 1, "composer": "Angus Young, Malcolm Young, Brian Johnson", "milliseconds": 343719, "bytes": 11170334, "unit_price": "0.99"}, {"track_id": 2, "name": "Balls to the Wall", "album_id": 2, "media_type_id": 2, "genre_id": 1, "composer": "U. Dirkschneider, W. Hoffmann, H. Frank, P. Baltes, S. Kaufmann, G. Hoffmann", "milliseconds": 342562, "bytes": 5510424, "unit_price": "0.99"}, {"track_id": 3, "name": "Fast As a Shark", "album_id": 3, "media_type_id": 2, "genre_id": 1, "composer": "F. Baltes, S. Kaufman, U. Dirkscneider & W. Hoffman", "milliseconds": 230619, "bytes": 3990994, "unit_price": "0.99"}, {"track_id": 4, "name": "Restless and Wild", "album_id": 3, "media_type_id": 2, "genre_id": 1, "composer": "F. Baltes, R.A. Smith-Diesel, S. Kaufman, U. Dirkscneider & W. Hoffman", "milliseconds": 252051, "bytes": 4331779, "unit_price": "0.99"}, {"track_id": 5, "name": "Princess of the Dawn", "album_id": 3, "media_type_id": 2, "genre_id": 1, "composer": "Deaffy & R.A. Smith-Diesel", "milliseconds": 375418, "bytes": 6290521, "unit_price": "0.99"}], "columns": [{"name": "track_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each track in the database", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "name", "type": "VARCHAR(200)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Title of the music track, with a high degree of uniqueness", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "album_id", "type": "INTEGER", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "album.album_id", "comment": null, "llm_description": "Identifier linking the track to its corresponding album in the album table", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "media_type_id", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "media_type.media_type_id", "comment": null, "llm_description": "Identifier indicating the type of media for the track, with key values including '1' for MPEG audio, '2' for AAC audio, and others", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "genre_id", "type": "INTEGER", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "genre.genre_id", "comment": null, "llm_description": "Identifier linking the track to its genre in the genre table, with top genres including '1' for Rock and '7' for Jazz", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "composer", "type": "VARCHAR(220)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Name of the composer of the track, with a significant portion of entries being null", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "milliseconds", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Duration of the track in milliseconds, indicating a wide range of track lengths", "llm_confidence": 90, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "bytes", "type": "INTEGER", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "File size of the audio track in bytes, with all values being unique", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "unit_price", "type": "NUMERIC(10, 2)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Sale price per unit of the track, with only two distinct values of $0.99 and $1.99", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": ["financial"], "naming_issue": null}]}], "type_colors": {"fact": "#7c3aed", "dimension": "#2563eb", "lookup": "#059669", "audit": "#d97706", "junction": "#0891b2", "unknown": "#4f46e5"}, "type_labels": {"fact": "Fact", "dimension": "Dimension", "lookup": "Lookup", "audit": "Audit", "junction": "Junction", "unknown": ""}};
+const tables = RAW.tables;
+let activeIdx = 0;
+let filteredTables = [...tables];
+let currentTypeFilter = '';
+
+// ── Theme ───────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.toggle('dark', !isDark);
+  html.classList.toggle('light', isDark);
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('dbdocs_theme', isDark ? 'light' : 'dark');
+}
+(function() {
+  const t = localStorage.getItem('dbdocs_theme') || 'dark';
+  document.documentElement.classList.toggle('dark', t==='dark');
+  document.documentElement.classList.toggle('light', t==='light');
+  if (t==='light') document.getElementById('themeBtn').textContent = '☀️';
+})();
+
+// ── Type color map ───────────────────────────────────────────────────────────
+const TYPE_COLORS = RAW.type_colors || {};
+const TYPE_LABELS = RAW.type_labels || {};
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const list = document.getElementById('tableList');
+  const cnt = document.getElementById('tableCount');
+  list.innerHTML = '';
+  filteredTables.forEach((t, i) => {
+    const origIdx = tables.indexOf(t);
+    const color = TYPE_COLORS[t.table_type] || '#4f46e5';
+    const hasPii = t.columns.some(c => c.pii_type || c.pii_detected);
+    const hasFkViol = (t.fk_integrity||[]).some(f => f.status==='violation');
+    const div = document.createElement('div');
+    div.className = 'px-2 py-2 rounded cursor-pointer border-l-2 border-transparent text-sm sb-hover transition-colors duration-100';
+    div.id = 'sb_' + origIdx;
+    div.innerHTML = `
+      <div class="flex items-center justify-between">
+        <span class="font-medium truncate" style="max-width:160px" title="${t.name}">${t.name}</span>
+        <div class="flex gap-1 items-center">
+          ${hasPii ? '<span class="text-xs text-red-400" title="PII columns">🔒</span>' : ''}
+          ${hasFkViol ? '<span class="text-xs text-orange-400" title="FK violations">⚠</span>' : ''}
+        </div>
+      </div>
+      <div class="flex items-center gap-1 mt-0.5">
+        <span class="text-xs text-gray-500">${(t.row_count||0).toLocaleString()} rows · ${t.column_count} cols</span>
+        ${t.table_type && t.table_type !== 'unknown' ? `<span class="type-badge" style="background:${color}22;color:${color}">${TYPE_LABELS[t.table_type]||t.table_type}</span>` : ''}
+      </div>`;
+    div.onclick = () => scrollToTable(origIdx);
+    list.appendChild(div);
+  });
+  cnt.textContent = `${filteredTables.length} of ${tables.length} tables`;
+}
+
+function filterType(type) {
+  currentTypeFilter = type;
+  document.querySelectorAll('.type-filter-btn').forEach(b => {
+    const active = b.dataset.type === type;
+    b.className = `type-filter-btn text-xs px-2 py-0.5 rounded ${active ? 'bg-purple-700 text-white' : 'btn-s'}`;
+  });
+  applyFilters();
+}
+
+function applyFilters() {
+  const q = document.getElementById('sidebarSearch').value.toLowerCase();
+  filteredTables = tables.filter(t => {
+    const matchQ = !q || t.name.toLowerCase().includes(q);
+    const matchType = !currentTypeFilter || t.table_type === currentTypeFilter;
+    return matchQ && matchType;
+  });
+  renderSidebar();
+}
+
+document.getElementById('sidebarSearch').addEventListener('input', applyFilters);
+
+// Column search
+document.getElementById('colSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.col-row').forEach(row => {
+    row.style.display = !q || row.dataset.name.toLowerCase().includes(q) || row.dataset.type.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+// ── Table cards ──────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Confidence badge: emoji + colour-coded pill  🟢≥80  🟡≥60  🟠≥40  🔴<40
+function confBadge(score) {
+  if (score == null) return '';
+  const n = Math.round(score);
+  let emoji, bg, fg;
+  if      (n >= 80) { emoji = '🟢'; bg = '#14532d'; fg = '#4ade80'; }
+  else if (n >= 60) { emoji = '🟡'; bg = '#1c3a0a'; fg = '#a3e635'; }
+  else if (n >= 40) { emoji = '🟠'; bg = '#451a03'; fg = '#fb923c'; }
+  else              { emoji = '🔴'; bg = '#450a0a'; fg = '#f87171'; }
+  return `<span style="flex-shrink:0;display:inline-flex;align-items:center;padding:1px 5px;border-radius:9999px;font-size:12px;background:${bg};color:${fg}" title="LLM confidence: ${n}/100">${emoji}</span>`;
+}
+
+function renderTables() {
+  const container = document.getElementById('tablesContainer');
+  container.innerHTML = '';
+  tables.forEach((t, idx) => {
+    const color = TYPE_COLORS[t.table_type] || '#4f46e5';
+    const hasPii = t.columns.some(c => c.pii_type || c.pii_detected);
+    const fkViols = (t.fk_integrity||[]).filter(f => f.status==='violation');
+    const fkErrors = (t.fk_integrity||[]).filter(f => f.status==='error');
+
+    const card = document.createElement('div');
+    card.className = 'card rounded-xl border overflow-hidden';
+    card.id = 'table_' + idx;
+
+    // Header
+    let headerHtml = `
+      <div class="px-5 py-4 border-b bdr flex items-start justify-between" style="background:linear-gradient(135deg,${color}22,transparent)">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-lg font-bold font-mono">${escHtml(t.name)}</h2>
+            ${t.schema ? `<span class="text-xs text-gray-500">${escHtml(t.schema)}</span>` : ''}
+            ${t.table_type && t.table_type!=='unknown' ? `<span class="type-badge" style="background:${color}33;color:${color}">${TYPE_LABELS[t.table_type]||t.table_type}</span>` : ''}
+            ${hasPii ? '<span class="pii-badge">🔒 PII</span>' : ''}
+            ${fkViols.length ? `<span class="warn-badge">⚠ ${fkViols.length} FK violation${fkViols.length>1?'s':''}</span>` : ''}
+          </div>
+          <div class="flex gap-3 mt-1 text-xs text-gray-400">
+            <span>${(t.row_count||0).toLocaleString()} rows</span>
+            <span>${t.columns.length} columns</span>
+            ${t.comment ? `<span class="italic">${escHtml(t.comment)}</span>` : ''}
+          </div>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <button onclick="copyColumns(${idx})" class="tooltip text-xs px-2 py-1 rounded btn-s" data-tip="Copy column list">📋 Copy</button>
+          <button onclick="toggleSql(${idx})" class="tooltip text-xs px-2 py-1 rounded btn-s" data-tip="SQL Snippets">⚡ SQL</button>
+        </div>
+      </div>`;
+
+    // LLM Description
+    let descHtml = '';
+    if (t.llm_description) {
+      const tConf = t.llm_confidence != null ? confBadge(t.llm_confidence) : '';
+      descHtml = `<div class="px-5 py-3 border-b bdr llm-d text-sm italic border-l-4 border-l-purple-500 flex items-start gap-3">
+        <span class="flex-1">${escHtml(t.llm_description)}</span>
+        ${tConf}
+      </div>`;
+    }
+
+    // SQL Snippet panel
+    const createSql = `CREATE TABLE ${t.name} (\n${t.columns.map(c => `  ${c.name} ${c.type}${c.nullable===false?' NOT NULL':''}`).join(',\n')}\n);`;
+    const selectSql = `SELECT\n  ${t.columns.slice(0,10).map(c=>c.name).join(',\n  ')}\nFROM ${t.name}\nLIMIT 100;`;
+    const sqlHtml = `
+      <div id="sql_${idx}" class="hidden px-5 py-4 border-b bdr code-block">
+        <div class="flex gap-2 mb-2">
+          <button onclick="showSnippet(${idx},'create')" class="snippet-tab text-xs px-2 py-1 rounded bg-purple-700 text-white" data-tab="create">CREATE TABLE</button>
+          <button onclick="showSnippet(${idx},'select')" class="snippet-tab text-xs px-2 py-1 rounded btn-s" data-tab="select">SELECT</button>
+          <button onclick="copySnippet(${idx})" class="ml-auto text-xs px-2 py-1 rounded btn-s">Copy SQL</button>
+        </div>
+        <pre id="snippet_${idx}" class="text-xs font-mono text-green-300 overflow-x-auto whitespace-pre-wrap">${escHtml(createSql)}</pre>
+      </div>`;
+
+    // Columns table
+    let colRows = '';
+    t.columns.forEach((c, ci) => {
+      const tags = (c.lineage_tags||[]).map(tag => `<span class="lineage-tag">${escHtml(tag)}</span>`).join(' ');
+      const namingIssue = c.naming_issue ? `<span class="tooltip warn-badge" data-tip="${escHtml(c.naming_issue)}">⚠</span>` : '';
+      const piiTag = (c.pii_type||c.pii_detected) ? `<span class="pii-badge">${escHtml(c.pii_type||c.pii_detected)}</span>` : '';
+      colRows += `
+        <tr class="col-row tr-hover border-b bdr" data-name="${escHtml(c.name)}" data-type="${escHtml(c.type)}">
+          <td class="px-3 py-2 text-center text-xs text-gray-500">${ci+1}</td>
+          <td class="px-3 py-2">
+            <div class="flex items-center gap-1 flex-wrap">
+              <span class="font-mono text-sm font-medium">${escHtml(c.name)}</span>
+              ${namingIssue}
+            </div>
+            <div class="flex flex-wrap gap-1 mt-0.5">${tags}</div>
+          </td>
+          <td class="px-3 py-2 font-mono text-xs text-blue-300">${escHtml(c.type)}</td>
+          <td class="px-3 py-2 text-center text-xs">${c.nullable===false?'<span class="text-red-400">✗</span>':'<span class="text-gray-500">✓</span>'}</td>
+          <td class="px-3 py-2">
+            <div class="flex flex-wrap gap-1">
+              ${c.is_primary_key?'<span class="pk-badge">PK</span>':''}
+              ${c.is_foreign_key?`<span class="fk-badge tooltip" data-tip="→ ${escHtml(c.foreign_key_to||'')}">FK</span>`:''}
+              ${c.nullable===false?'<span class="nn-badge">NN</span>':''}
+              ${piiTag}
+            </div>
+          </td>
+          <td class="px-3 py-2 text-xs text-gray-400 font-mono">${c.default!=null?escHtml(String(c.default)):''}</td>
+          <td class="px-3 py-2 text-xs text-gray-400">
+            <div class="flex items-start gap-1.5">
+              <span class="flex-1">${c.llm_description?escHtml(c.llm_description):(c.comment?`<span class="text-gray-500">${escHtml(c.comment)}</span>`:'')}</span>
+              ${c.llm_confidence!=null ? confBadge(c.llm_confidence) : ''}
+            </div>
+          </td>
+        </tr>`;
+    });
+
+    const colTable = `
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="th">
+              <th class="px-3 py-2 text-left text-xs font-medium w-8">#</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Column</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Type</th>
+              <th class="px-3 py-2 text-center text-xs font-medium">Null</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Flags</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Default</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Description</th>
+            </tr>
+          </thead>
+          <tbody>${colRows}</tbody>
+        </table>
+      </div>`;
+
+    // Collapsible sections
+    let extraSections = '';
+
+    // FK Integrity
+    if ((t.fk_integrity||[]).length > 0) {
+      const rows = t.fk_integrity.map(f => {
+        const statusColor = f.status==='ok' ? 'text-green-400' : f.status==='violation' ? 'text-red-400' : 'text-yellow-400';
+        return `<tr class="border-b bdr">
+          <td class="px-3 py-1.5 text-xs font-mono">${escHtml(f.local_col)}</td>
+          <td class="px-3 py-1.5 text-xs font-mono">${escHtml(f.ref_table)}.${escHtml(f.ref_col)}</td>
+          <td class="px-3 py-1.5 text-xs text-right ${statusColor}">${f.orphan_count >= 0 ? f.orphan_count.toLocaleString() : 'err'}</td>
+          <td class="px-3 py-1.5 text-xs ${statusColor} font-medium">${f.status}</td>
+        </tr>`;
+      }).join('');
+      extraSections += `
+        <div class="border-t bdr">
+          <button onclick="toggleSection(this)" class="w-full px-5 py-2.5 text-left text-sm font-medium flex items-center justify-between sect-hover transition-colors">
+            <span>🔗 FK Integrity (${t.fk_integrity.length})</span><span class="chevron text-gray-500">▶</span>
+          </button>
+          <div class="section-content hidden">
+            <table class="w-full text-sm mb-2">
+              <thead><tr class="th"><th class="px-3 py-1.5 text-xs font-medium">Local Col</th><th class="px-3 py-1.5 text-xs font-medium">References</th><th class="px-3 py-1.5 text-xs font-medium text-right">Orphans</th><th class="px-3 py-1.5 text-xs font-medium">Status</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    // Indexes
+    if ((t.indexes||[]).length > 0) {
+      const rows = t.indexes.map(ix => `<tr class="border-b bdr">
+        <td class="px-3 py-1.5 text-xs font-mono">${escHtml(ix.name||'')}</td>
+        <td class="px-3 py-1.5 text-xs">${(ix.columns||[]).join(', ')}</td>
+        <td class="px-3 py-1.5 text-xs text-center">${ix.unique?'<span class="idx-badge">UNIQUE</span>':''}</td>
+      </tr>`).join('');
+      extraSections += `
+        <div class="border-t bdr">
+          <button onclick="toggleSection(this)" class="w-full px-5 py-2.5 text-left text-sm font-medium flex items-center justify-between sect-hover transition-colors">
+            <span>📑 Indexes (${t.indexes.length})</span><span class="chevron text-gray-500">▶</span>
+          </button>
+          <div class="section-content hidden">
+            <table class="w-full text-sm mb-2">
+              <thead><tr class="th"><th class="px-3 py-1.5 text-xs font-medium">Name</th><th class="px-3 py-1.5 text-xs font-medium">Columns</th><th class="px-3 py-1.5 text-xs font-medium text-center">Unique</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    // Sample data
+    if (t.sample_data && t.sample_data.length > 0) {
+      const cols = Object.keys(t.sample_data[0]);
+      const headers = cols.map(c => `<th class="px-3 py-1.5 text-xs font-medium font-mono">${escHtml(c)}</th>`).join('');
+      const dataRows = t.sample_data.slice(0,5).map(row => 
+        `<tr class="border-b bdr">${cols.map(c => `<td class="px-3 py-1.5 text-xs font-mono text-gray-400">${escHtml(String(row[c]??''))}</td>`).join('')}</tr>`
+      ).join('');
+      extraSections += `
+        <div class="border-t bdr">
+          <button onclick="toggleSection(this)" class="w-full px-5 py-2.5 text-left text-sm font-medium flex items-center justify-between sect-hover transition-colors">
+            <span>🗂 Sample Data (${t.sample_data.length} rows)</span><span class="chevron text-gray-500">▶</span>
+          </button>
+          <div class="section-content hidden overflow-x-auto">
+            <table class="w-full text-sm mb-2">
+              <thead><tr class="th">${headers}</tr></thead>
+              <tbody>${dataRows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    card.innerHTML = headerHtml + descHtml + sqlHtml + colTable + extraSections;
+    container.appendChild(card);
+  });
+}
+
+// ── Interactions ─────────────────────────────────────────────────────────────
+function toggleSection(btn) {
+  const content = btn.nextElementSibling;
+  const chevron = btn.querySelector('.chevron');
+  const hidden = content.classList.toggle('hidden');
+  chevron.textContent = hidden ? '▶' : '▼';
+}
+
+function toggleSql(idx) {
+  const panel = document.getElementById('sql_' + idx);
+  panel.classList.toggle('hidden');
+}
+
+const sqlSnippets = {};
+function showSnippet(idx, tab) {
+  const t = tables[idx];
+  const pre = document.getElementById('snippet_' + idx);
+  const tabs = document.querySelectorAll(`#sql_${idx} .snippet-tab`);
+  tabs.forEach(b => {
+    const active = b.dataset.tab === tab;
+    b.className = `snippet-tab text-xs px-2 py-1 rounded ${active ? 'bg-purple-700 text-white' : 'btn-s'}`;
+  });
+  if (tab === 'create') {
+    pre.textContent = `CREATE TABLE ${t.name} (\n${t.columns.map(c => `  ${c.name} ${c.type}${c.nullable===false?' NOT NULL':''}`).join(',\n')}\n);`;
+  } else {
+    pre.textContent = `SELECT\n  ${t.columns.slice(0,10).map(c=>c.name).join(',\n  ')}\nFROM ${t.name}\nLIMIT 100;`;
+  }
+}
+
+function copySnippet(idx) {
+  const text = document.getElementById('snippet_' + idx).textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('SQL copied!'));
+}
+
+function copyColumns(idx) {
+  const t = tables[idx];
+  const text = t.columns.map(c => c.name).join('\n');
+  navigator.clipboard.writeText(text).then(() => showToast('Columns copied!'));
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#7c3aed;color:white;padding:8px 16px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:opacity 0.2s;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+}
+
+function printPage() {
+  window.print();
+}
+
+// ── Active table tracking via IntersectionObserver ───────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = parseInt(e.target.id.split('_')[1]);
+      document.querySelectorAll('#tableList > div').forEach(el => el.classList.remove('active-table'));
+      const sb = document.getElementById('sb_' + idx);
+      if (sb) { sb.classList.add('active-table'); sb.scrollIntoView({ block:'nearest' }); }
+      activeIdx = filteredTables.indexOf(tables[idx]);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '-10% 0px -80% 0px' });
+
+function scrollToTable(idx) {
+  const el = document.getElementById('table_' + idx);
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── Keyboard shortcuts ───────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const si = document.getElementById('sidebarSearch');
+  const ci = document.getElementById('colSearch');
+  if (document.activeElement === si || document.activeElement === ci) {
+    if (e.key === 'Escape') { si.value=''; ci.value=''; si.blur(); ci.blur(); applyFilters(); document.querySelectorAll('.col-row').forEach(r => r.style.display=''); }
+    return;
+  }
+  if (e.key === '/') { e.preventDefault(); si.focus(); si.select(); }
+  else if (e.key === 'j') {
+    const next = Math.min(activeIdx+1, filteredTables.length-1);
+    scrollToTable(tables.indexOf(filteredTables[next]));
+  } else if (e.key === 'k') {
+    const prev = Math.max(activeIdx-1, 0);
+    scrollToTable(tables.indexOf(filteredTables[prev]));
+  }
+});
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+renderTables();
+renderSidebar();
+tables.forEach((t, i) => {
+  const el = document.getElementById('table_' + i);
+  if (el) observer.observe(el);
+});
+</script>
+</body>
+</html>

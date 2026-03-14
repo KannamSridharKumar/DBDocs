@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Data Dictionary – northwind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: { extend: { fontFamily: { sans: ['Inter','sans-serif'], mono: ['JetBrains Mono','monospace'] } } }
+}
+</script>
+<style>
+:root { --bg:#0a0e1a; --card:#111827; --border:#1f2937; --accent:#7c3aed; --accent2:#6366f1; }
+.dark body { background:#0a0e1a; color:#e5e7eb; }
+.light body { background:#f3f4f6; color:#111827; }
+.dark .card { background:#111827; border-color:#1f2937; }
+.light .card { background:#ffffff; border-color:#e5e7eb; }
+.dark .sidebar { background:#0d1117; border-color:#1f2937; }
+.light .sidebar { background:#f9fafb; border-color:#e5e7eb; }
+.dark .th { background:#1f2937; color:#9ca3af; }
+.light .th { background:#f3f4f6; color:#6b7280; }
+.dark .tr-hover:hover { background:#1f2937; }
+.light .tr-hover:hover { background:#f9fafb; }
+.dark .inp { background:#1f2937; border-color:#374151; color:#e5e7eb; }
+.light .inp { background:#fff; border-color:#d1d5db; color:#111827; }
+.dark .tag { background:#1e1b4b; color:#a5b4fc; }
+.light .tag { background:#ede9fe; color:#4f46e5; }
+.dark .code-block { background:#0d1117; }
+.light .code-block { background:#f8fafc; border:1px solid #e2e8f0; }
+.pii-badge { background:#7f1d1d; color:#fca5a5; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.pk-badge  { background:#78350f; color:#fcd34d; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.fk-badge  { background:#1e3a5f; color:#93c5fd; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.nn-badge  { background:#1c2b1c; color:#86efac; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.idx-badge { background:#2d1b4e; color:#c4b5fd; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.warn-badge { background:#451a03; color:#fdba74; font-size:0.65rem; padding:1px 6px; border-radius:9999px; }
+.type-badge { font-size:0.65rem; padding:1px 8px; border-radius:9999px; font-weight:600; }
+.lineage-tag { background:#0c2a1e; color:#6ee7b7; font-size:0.6rem; padding:1px 5px; border-radius:4px; }
+.dark .lineage-tag { background:#0c2a1e; color:#6ee7b7; }
+.light .lineage-tag { background:#d1fae5; color:#065f46; }
+.active-table { border-left: 3px solid #7c3aed !important; }
+.scroll-area { height: calc(100vh - 120px); overflow-y: auto; }
+/* adaptive helpers */
+.dark .bdr{border-color:#1f2937}.light .bdr{border-color:#e5e7eb}
+.dark .txt-h{color:#e5e7eb}.light .txt-h{color:#111827}
+.dark .btn-s{background:#374151;color:#d1d5db}.light .btn-s{background:#f1f5f9;color:#374151;border:1px solid #d1d5db}
+.dark .btn-s:hover{background:#4b5563}.light .btn-s:hover{background:#e2e8f0}
+.dark .sb-hover:hover{background:#1f2937}.light .sb-hover:hover{background:#f1f5f9}
+.dark .sect-hover:hover{background:rgba(31,41,55,0.5)}.light .sect-hover:hover{background:rgba(243,244,246,0.8)}
+.dark .llm-d{background:rgba(76,29,149,0.12);color:#d1d5db}.light .llm-d{background:rgba(237,233,254,0.4);color:#374151}
+.scroll-area::-webkit-scrollbar { width:4px; }
+.scroll-area::-webkit-scrollbar-track { background:transparent; }
+.scroll-area::-webkit-scrollbar-thumb { background:#374151; border-radius:2px; }
+.tooltip { position:relative; }
+.tooltip:hover::after { content:attr(data-tip); position:absolute; bottom:110%; left:50%; transform:translateX(-50%); background:#111827; color:#e5e7eb; font-size:0.7rem; padding:3px 8px; border-radius:4px; white-space:nowrap; z-index:50; pointer-events:none; }
+@media print {
+  .no-print { display:none !important; }
+  .main-content { margin-left:0 !important; }
+  body { background:white !important; color:black !important; }
+}
+</style>
+</head>
+<body class="font-sans transition-colors duration-200">
+<div id="app" class="flex h-screen overflow-hidden">
+
+<!-- Sidebar -->
+<aside class="sidebar no-print fixed left-0 top-0 h-full w-72 border-r flex flex-col z-30 transition-colors duration-200">
+  <div class="p-4 border-b border-inherit">
+    <div class="flex items-center justify-between mb-1">
+      <a href="index.html" class="text-xs text-purple-400 hover:text-purple-300">← Back to Index</a>
+      <div class="flex gap-2">
+        <button onclick="printPage()" class="tooltip text-gray-400 hover:text-gray-200 text-sm" data-tip="Print / PDF">🖨️</button>
+        <button onclick="toggleTheme()" id="themeBtn" class="tooltip text-gray-400 hover:text-gray-200 text-sm" data-tip="Toggle theme">🌙</button>
+      </div>
+    </div>
+    <h1 class="font-bold text-base truncate" title="northwind">northwind</h1>
+    <p class="text-xs text-gray-500 mt-0.5">Data Dictionary</p>
+  </div>
+  <div class="p-3 border-b border-inherit">
+    <div class="relative">
+      <input id="sidebarSearch" type="text" placeholder="Search tables… ( / )"
+        class="inp w-full rounded-md px-3 py-1.5 text-sm pr-8 focus:outline-none focus:ring-1 focus:ring-purple-500"/>
+      <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">↵</span>
+    </div>
+    <div class="flex gap-1 mt-2 flex-wrap" id="typeFilters">
+      <button onclick="filterType('')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-purple-700 text-white" data-type="">All</button>
+      <button onclick="filterType('fact')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="fact">Fact</button>
+      <button onclick="filterType('dimension')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="dimension">Dim</button>
+      <button onclick="filterType('lookup')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="lookup">Lookup</button>
+      <button onclick="filterType('junction')" class="type-filter-btn text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300" data-type="junction">Junction</button>
+    </div>
+  </div>
+  <div class="scroll-area flex-1 p-2" id="tableList"></div>
+  <div class="p-3 border-t border-inherit text-xs text-gray-500">
+    <div id="tableCount"></div>
+    <div class="mt-1 text-gray-600 text-xs">j/k navigate · / search · Esc clear</div>
+  </div>
+</aside>
+
+<!-- Main content -->
+<main class="main-content ml-72 flex-1 overflow-y-auto scroll-area" id="mainContent">
+  <div class="sticky top-0 z-20 border-b bdr px-6 py-3 flex items-center justify-between no-print" style="background:inherit">
+    <div class="flex gap-4 text-sm">
+      <a href="data_profiling.html" class="text-blue-400 hover:text-blue-300">📊 Profiling</a>
+      <a href="erd.html" class="text-purple-400 hover:text-purple-300">🗺 ERD</a>
+    </div>
+    <div class="flex items-center gap-3">
+      <input id="colSearch" type="text" placeholder="Search columns…"
+        class="inp rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500 w-48"/>
+      <span class="text-xs text-gray-500" id="genAt">2026-03-14</span>
+    </div>
+  </div>
+  <div class="p-6 space-y-8" id="tablesContainer"></div>
+</main>
+
+</div><!-- #app -->
+
+<script>
+const RAW = {"db_name": "northwind", "generated_at": "2026-03-14T08:04:31.973314+00:00", "total_tables": 13, "total_columns": 88, "total_rows": 3311, "tables": [{"name": "categories", "schema": null, "row_count": 8, "comment": null, "llm_description": "The `categories` table serves as a lookup reference for various product categories within the database. Each entry is identified by a unique `category_id` and includes a `category_name` that describes the type of product, along with a `description` providing additional details about the category. The `picture` column, which currently contains only one distinct value, is intended to store an image associated with the category, although its limited variability may indicate a need for further data enrichment. This table is essential for organizing products into meaningful classifications that facilitate easier navigation and management within the system.", "llm_confidence": 85, "table_type": "lookup", "primary_keys": ["category_id"], "foreign_keys": [], "indexes": [], "fk_integrity": [], "sample_data": [{"category_id": 1, "category_name": "Beverages", "description": "Soft drinks, coffees, teas, beers, and ales", "picture": "<memory at 0x106843dc0>"}, {"category_id": 2, "category_name": "Condiments", "description": "Sweet and savory sauces, relishes, spreads, and seasonings", "picture": "<memory at 0x106f98340>"}, {"category_id": 3, "category_name": "Confections", "description": "Desserts, candies, and sweet breads", "picture": "<memory at 0x106f98280>"}, {"category_id": 4, "category_name": "Dairy Products", "description": "Cheeses", "picture": "<memory at 0x106f981c0>"}, {"category_id": 5, "category_name": "Grains/Cereals", "description": "Breads, crackers, pasta, and cereal", "picture": "<memory at 0x106f98400>"}], "columns": [{"name": "category_id", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each category, ranging from 1 to 8", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "category_name", "type": "VARCHAR(15)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Distinct name for each category, limited to 15 characters", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "description", "type": "TEXT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Detailed description of each category, ensuring uniqueness across entries", "llm_confidence": 90, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "picture", "type": "BYTEA", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Constant memory reference indicating a placeholder for category images", "llm_confidence": 30, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "customer_customer_demo", "schema": null, "row_count": 0, "comment": null, "llm_description": "The `customer_customer_demo` table serves as a junction table that links customers to their respective types, allowing for a many-to-many relationship between customers and customer types. Each entry in this table associates a unique customer identifier with a specific customer type identifier, facilitating the categorization of customers based on various demographic or behavioral characteristics. This structure enables the business to efficiently manage and analyze customer segments for targeted marketing and service strategies. The absence of rows indicates that no customer-type associations have been recorded yet.", "llm_confidence": 85, "table_type": "junction", "primary_keys": ["customer_id", "customer_type_id"], "foreign_keys": [{"name": "fk_customer_customer_demo_customer_demographics", "constrained_columns": ["customer_type_id"], "referred_table": "customer_demographics", "referred_columns": ["customer_type_id"], "label": "customer_type_id \u2192 customer_demographics.customer_type_id"}, {"name": "fk_customer_customer_demo_customers", "constrained_columns": ["customer_id"], "referred_table": "customers", "referred_columns": ["customer_id"], "label": "customer_id \u2192 customers.customer_id"}], "indexes": [], "fk_integrity": [{"fk_name": "fk_customer_customer_demo_customer_demographics", "local_col": "customer_type_id", "ref_table": "customer_demographics", "ref_col": "customer_type_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "fk_customer_customer_demo_customers", "local_col": "customer_id", "ref_table": "customers", "ref_col": "customer_id", "orphan_count": 0, "status": "ok"}], "sample_data": [], "columns": [{"name": "customer_id", "type": "VARCHAR(5)", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": true, "foreign_key_to": "customers.customer_id", "comment": null, "llm_description": "Unique identifier for each customer in the system, linking to the main customers table", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "customer_type_id", "type": "VARCHAR(5)", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": true, "foreign_key_to": "customer_demographics.customer_type_id", "comment": null, "llm_description": "Identifier for the demographic category of the customer, linking to the customer demographics table", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}]}, {"name": "customer_demographics", "schema": null, "row_count": 0, "comment": null, "llm_description": "The `customer_demographics` table is designed to categorize and describe different types of customers for a business. It stores a unique identifier for each customer type alongside a textual description that provides further details about that category. This information is crucial for understanding customer segments, tailoring marketing strategies, and improving customer relationship management. By utilizing this dimension table, businesses can analyze customer behavior and preferences based on their demographic classifications.", "llm_confidence": 85, "table_type": "dimension", "primary_keys": ["customer_type_id"], "foreign_keys": [], "indexes": [], "fk_integrity": [], "sample_data": [], "columns": [{"name": "customer_type_id", "type": "VARCHAR(5)", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Identifier for the type of customer, such as 'REG' for regular or 'VIP' for VIP customers, used to categorize customer demographics", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "customer_desc", "type": "TEXT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Description providing additional details about the customer type, such as 'Regular customer' or 'Very Important Person'", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "customers", "schema": null, "row_count": 91, "comment": null, "llm_description": "The \"customers\" table stores detailed information about the clients of a business, including their company names, contact details, and geographical locations. It serves as a reference for managing customer relationships and facilitating communication, as it includes essential fields like contact names, titles, and addresses. The presence of phone and fax columns suggests that the table is also used for direct outreach and support purposes. However, the high null rate in the 'region' column indicates potential gaps in geographic data that may affect analysis and reporting.", "llm_confidence": 82, "table_type": "dimension", "primary_keys": ["customer_id"], "foreign_keys": [], "indexes": [], "fk_integrity": [], "sample_data": [{"customer_id": "ALFKI", "company_name": "Alfreds Futterkiste", "contact_name": "Maria Anders", "contact_title": "Sales Representative", "address": "Obere Str. 57", "city": "Berlin", "region": null, "postal_code": "12209", "country": "Germany", "phone": "030-0074321", "fax": "030-0076545"}, {"customer_id": "ANATR", "company_name": "Ana Trujillo Emparedados y helados", "contact_name": "Ana Trujillo", "contact_title": "Owner", "address": "Avda. de la Constituci\u00f3n 2222", "city": "M\u00e9xico D.F.", "region": null, "postal_code": "05021", "country": "Mexico", "phone": "(5) 555-4729", "fax": "(5) 555-3745"}, {"customer_id": "ANTON", "company_name": "Antonio Moreno Taquer\u00eda", "contact_name": "Antonio Moreno", "contact_title": "Owner", "address": "Mataderos  2312", "city": "M\u00e9xico D.F.", "region": null, "postal_code": "05023", "country": "Mexico", "phone": "(5) 555-3932", "fax": null}, {"customer_id": "AROUT", "company_name": "Around the Horn", "contact_name": "Thomas Hardy", "contact_title": "Sales Representative", "address": "120 Hanover Sq.", "city": "London", "region": null, "postal_code": "WA1 1DP", "country": "UK", "phone": "(171) 555-7788", "fax": "(171) 555-6750"}, {"customer_id": "BERGS", "company_name": "Berglunds snabbk\u00f6p", "contact_name": "Christina Berglund", "contact_title": "Order Administrator", "address": "Berguvsv\u00e4gen  8", "city": "Lule\u00e5", "region": null, "postal_code": "S-958 22", "country": "Sweden", "phone": "0921-12 34 65", "fax": "0921-12 34 67"}], "columns": [{"name": "customer_id", "type": "VARCHAR(5)", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each customer represented by a short code of 5 characters", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "company_name", "type": "VARCHAR(40)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The name of the company associated with the customer, which is always unique", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "contact_name", "type": "VARCHAR(30)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The name of the primary contact person for the customer, which is always unique", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "contact_title", "type": "VARCHAR(30)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The job title of the primary contact person, with distinct values such as 'Sales Representative' and 'Owner'", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "address", "type": "VARCHAR(60)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The physical address of the customer, which is always unique and contains personally identifiable information", "llm_confidence": 95, "pii_type": "Address", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "city", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The city where the customer is located, with a limited set of distinct values like 'London' and 'Sao Paulo'", "llm_confidence": 80, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "region", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The regional identifier for the customer's location, which is often absent and has several distinct values", "llm_confidence": 60, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "postal_code", "type": "VARCHAR(10)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The postal code for the customer's address, which serves as a natural key and has multiple distinct values", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": ["natural_key"], "naming_issue": null}, {"name": "country", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The country where the customer is located, with a limited set of distinct values such as 'USA' and 'Germany'", "llm_confidence": 80, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "phone", "type": "VARCHAR(24)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The unique phone number for the customer, which contains personally identifiable information", "llm_confidence": 95, "pii_type": "Phone", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "fax", "type": "VARCHAR(24)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The fax number for the customer, which is often absent and contains personally identifiable information", "llm_confidence": 60, "pii_type": "Phone", "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "employee_territories", "schema": null, "row_count": 49, "comment": null, "llm_description": "The `employee_territories` table serves as a junction table that establishes a many-to-many relationship between employees and the territories they are responsible for. Each entry in the table links a specific employee, identified by their `employee_id`, to a corresponding `territory_id`, which represents a geographical area or market segment. This structure allows for efficient tracking of which employees manage which territories, facilitating better resource allocation and sales strategy development. Overall, the table is crucial for understanding employee assignments and optimizing territory management within the organization.", "llm_confidence": 90, "table_type": "junction", "primary_keys": ["employee_id", "territory_id"], "foreign_keys": [{"name": "fk_employee_territories_employees", "constrained_columns": ["employee_id"], "referred_table": "employees", "referred_columns": ["employee_id"], "label": "employee_id \u2192 employees.employee_id"}, {"name": "fk_employee_territories_territories", "constrained_columns": ["territory_id"], "referred_table": "territories", "referred_columns": ["territory_id"], "label": "territory_id \u2192 territories.territory_id"}], "indexes": [], "fk_integrity": [{"fk_name": "fk_employee_territories_employees", "local_col": "employee_id", "ref_table": "employees", "ref_col": "employee_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "fk_employee_territories_territories", "local_col": "territory_id", "ref_table": "territories", "ref_col": "territory_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"employee_id": 1, "territory_id": "06897"}, {"employee_id": 1, "territory_id": "19713"}, {"employee_id": 2, "territory_id": "01581"}, {"employee_id": 2, "territory_id": "01730"}, {"employee_id": 2, "territory_id": "01833"}], "columns": [{"name": "employee_id", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": true, "foreign_key_to": "employees.employee_id", "comment": null, "llm_description": "Identifies the employee associated with a specific territory, with values ranging from 1 to 9 representing distinct employees", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "territory_id", "type": "VARCHAR(20)", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": true, "foreign_key_to": "territories.territory_id", "comment": null, "llm_description": "Represents a unique short code for each territory, ensuring that each territory is distinctly identified", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}]}, {"name": "employees", "schema": null, "row_count": 9, "comment": null, "llm_description": "The \"employees\" table stores detailed information about the staff members within an organization, including their personal identifiers, job titles, and contact information. It captures essential data such as names, birth dates, hire dates, and addresses, which are crucial for HR management and employee records. Additionally, the table includes fields for reporting relationships and employee photos, facilitating organizational structure and identification. This dimension table serves as a foundational dataset for various HR-related analyses and reporting needs.", "llm_confidence": 85, "table_type": "dimension", "primary_keys": ["employee_id"], "foreign_keys": [{"name": "fk_employees_employees", "constrained_columns": ["reports_to"], "referred_table": "employees", "referred_columns": ["employee_id"], "label": "reports_to \u2192 employees.employee_id"}], "indexes": [], "fk_integrity": [{"fk_name": "fk_employees_employees", "local_col": "reports_to", "ref_table": "employees", "ref_col": "employee_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"employee_id": 1, "last_name": "Davolio", "first_name": "Nancy", "title": "Sales Representative", "title_of_courtesy": "Ms.", "birth_date": "1948-12-08", "hire_date": "1992-05-01", "address": "507 - 20th Ave. E.\\nApt. 2A", "city": "Seattle", "region": "WA", "postal_code": "98122", "country": "USA", "home_phone": "(206) 555-9857", "extension": "5467", "photo": "<memory at 0x106f98a00>", "notes": "Education includes a BA in psychology from Colorado State University in 1970.  She also completed The Art of the Cold Call.  Nancy is a member of Toastmasters International.", "reports_to": 2, "photo_path": "http://accweb/emmployees/davolio.bmp"}, {"employee_id": 2, "last_name": "Fuller", "first_name": "Andrew", "title": "Vice President, Sales", "title_of_courtesy": "Dr.", "birth_date": "1952-02-19", "hire_date": "1992-08-14", "address": "908 W. Capital Way", "city": "Tacoma", "region": "WA", "postal_code": "98401", "country": "USA", "home_phone": "(206) 555-9482", "extension": "3457", "photo": "<memory at 0x106f98b80>", "notes": "Andrew received his BTS commercial in 1974 and a Ph.D. in international marketing from the University of Dallas in 1981.  He is fluent in French and Italian and reads German.  He joined the company as a sales representative, was promoted to sales manager in January 1992 and to vice president of sales in March 1993.  Andrew is a member of the Sales Management Roundtable, the Seattle Chamber of Commerce, and the Pacific Rim Importers Association.", "reports_to": null, "photo_path": "http://accweb/emmployees/fuller.bmp"}, {"employee_id": 3, "last_name": "Leverling", "first_name": "Janet", "title": "Sales Representative", "title_of_courtesy": "Ms.", "birth_date": "1963-08-30", "hire_date": "1992-04-01", "address": "722 Moss Bay Blvd.", "city": "Kirkland", "region": "WA", "postal_code": "98033", "country": "USA", "home_phone": "(206) 555-3412", "extension": "3355", "photo": "<memory at 0x106f98d00>", "notes": "Janet has a BS degree in chemistry from Boston College (1984).  She has also completed a certificate program in food retailing management.  Janet was hired as a sales associate in 1991 and promoted to sales representative in February 1992.", "reports_to": 2, "photo_path": "http://accweb/emmployees/leverling.bmp"}, {"employee_id": 4, "last_name": "Peacock", "first_name": "Margaret", "title": "Sales Representative", "title_of_courtesy": "Mrs.", "birth_date": "1937-09-19", "hire_date": "1993-05-03", "address": "4110 Old Redmond Rd.", "city": "Redmond", "region": "WA", "postal_code": "98052", "country": "USA", "home_phone": "(206) 555-8122", "extension": "5176", "photo": "<memory at 0x106f98e80>", "notes": "Margaret holds a BA in English literature from Concordia College (1958) and an MA from the American Institute of Culinary Arts (1966).  She was assigned to the London office temporarily from July through November 1992.", "reports_to": 2, "photo_path": "http://accweb/emmployees/peacock.bmp"}, {"employee_id": 5, "last_name": "Buchanan", "first_name": "Steven", "title": "Sales Manager", "title_of_courtesy": "Mr.", "birth_date": "1955-03-04", "hire_date": "1993-10-17", "address": "14 Garrett Hill", "city": "London", "region": null, "postal_code": "SW1 8JR", "country": "UK", "home_phone": "(71) 555-4848", "extension": "3453", "photo": "<memory at 0x106f99000>", "notes": "Steven Buchanan graduated from St. Andrews University, Scotland, with a BSC degree in 1976.  Upon joining the company as a sales representative in 1992, he spent 6 months in an orientation program at the Seattle office and then returned to his permanent post in London.  He was promoted to sales manager in March 1993.  Mr. Buchanan has completed the courses Successful Telemarketing and International Sales Management.  He is fluent in French.", "reports_to": 2, "photo_path": "http://accweb/emmployees/buchanan.bmp"}], "columns": [{"name": "employee_id", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each employee, ranging from 1 to 9", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "last_name", "type": "VARCHAR(20)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique surname of the employee, considered personally identifiable information (PII)", "llm_confidence": 95, "pii_type": "Person Name", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "first_name", "type": "VARCHAR(10)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique given name of the employee, considered personally identifiable information (PII)", "llm_confidence": 95, "pii_type": "Person Name", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "title", "type": "VARCHAR(30)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Job title of the employee, with distinct values including 'Sales Representative', 'Vice President, Sales', 'Sales Manager', and 'Inside Sales Coordinator'", "llm_confidence": 90, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "title_of_courtesy", "type": "VARCHAR(25)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Form of address for the employee, with options like 'Ms.', 'Mr.', 'Dr.', and 'Mrs.'", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "birth_date", "type": "DATE", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique date of birth for each employee, considered personally identifiable information (PII)", "llm_confidence": 95, "pii_type": "Date of Birth", "pii_detected": null, "lineage_tags": ["temporal"], "naming_issue": null}, {"name": "hire_date", "type": "DATE", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Specific date when the employee was hired, with limited distinct values indicating a specific hiring timeline", "llm_confidence": 80, "pii_type": null, "pii_detected": null, "lineage_tags": ["temporal"], "naming_issue": null}, {"name": "address", "type": "VARCHAR(60)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique residential address of the employee, considered personally identifiable information (PII)", "llm_confidence": 95, "pii_type": "Address", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "city", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "City of residence for the employee, with limited distinct values including 'London', 'Seattle', 'Tacoma', 'Kirkland', and 'Redmond'", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "region", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Constant value indicating the state of Washington (WA), with 44% of entries being null", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "postal_code", "type": "VARCHAR(10)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique postal code for the employee's address, serving as a natural key", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["natural_key"], "naming_issue": null}, {"name": "country", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Country of residence for the employee, with distinct values 'USA' and 'UK'", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "home_phone", "type": "VARCHAR(24)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique home telephone number for the employee, considered personally identifiable information (PII)", "llm_confidence": 95, "pii_type": "Phone", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "extension", "type": "VARCHAR(4)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique telephone extension for the employee, typically used in office settings", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "photo", "type": "BYTEA", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Constant memory reference for the employee's photo, indicating a placeholder value", "llm_confidence": 30, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "notes", "type": "TEXT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique notes or comments related to the employee, potentially containing additional information", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "reports_to", "type": "SMALLINT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "employees.employee_id", "comment": null, "llm_description": "Identifier for the employee's supervisor, linking to another employee's ID, with 11% of entries being null", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "photo_path", "type": "VARCHAR(255)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "URL link to the employee's photo, with limited distinct values indicating specific file paths", "llm_confidence": 80, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "order_details", "schema": null, "row_count": 2155, "comment": null, "llm_description": "The `order_details` table serves as a junction table that links individual orders to the specific products included in each order. It captures essential information about each product within an order, including the unit price, quantity ordered, and any applicable discounts. This structure allows for a many-to-many relationship between orders and products, facilitating detailed tracking of sales transactions. By maintaining this data, the business can analyze sales performance, inventory needs, and customer purchasing behavior effectively.", "llm_confidence": 90, "table_type": "junction", "primary_keys": ["order_id", "product_id"], "foreign_keys": [{"name": "fk_order_details_orders", "constrained_columns": ["order_id"], "referred_table": "orders", "referred_columns": ["order_id"], "label": "order_id \u2192 orders.order_id"}, {"name": "fk_order_details_products", "constrained_columns": ["product_id"], "referred_table": "products", "referred_columns": ["product_id"], "label": "product_id \u2192 products.product_id"}], "indexes": [], "fk_integrity": [{"fk_name": "fk_order_details_orders", "local_col": "order_id", "ref_table": "orders", "ref_col": "order_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "fk_order_details_products", "local_col": "product_id", "ref_table": "products", "ref_col": "product_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"order_id": 10248, "product_id": 11, "unit_price": 14.0, "quantity": 12, "discount": 0.0}, {"order_id": 10248, "product_id": 42, "unit_price": 9.8, "quantity": 10, "discount": 0.0}, {"order_id": 10248, "product_id": 72, "unit_price": 34.8, "quantity": 5, "discount": 0.0}, {"order_id": 10249, "product_id": 14, "unit_price": 18.6, "quantity": 9, "discount": 0.0}, {"order_id": 10249, "product_id": 51, "unit_price": 42.4, "quantity": 40, "discount": 0.0}], "columns": [{"name": "order_id", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": true, "foreign_key_to": "orders.order_id", "comment": null, "llm_description": "Unique identifier for each order, linking to the orders table", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "product_id", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": true, "foreign_key_to": "products.product_id", "comment": null, "llm_description": "Unique identifier for each product, linking to the products table", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "unit_price", "type": "REAL", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Price per unit of the product sold in the order, ranging from $2.00 to $263.50", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": ["financial"], "naming_issue": null}, {"name": "quantity", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Number of units of the product ordered, with values ranging from 1 to 130", "llm_confidence": 80, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "discount", "type": "REAL", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Discount applied to the order, with key values including 0.0, 0.05, 0.1, 0.2, and up to 0.25", "llm_confidence": 90, "pii_type": null, "pii_detected": null, "lineage_tags": ["financial"], "naming_issue": null}]}, {"name": "orders", "schema": null, "row_count": 830, "comment": null, "llm_description": "The \"orders\" table captures detailed information about customer orders processed by the business. Each record includes essential order details such as the unique order identifier, customer and employee associations, and key dates related to the order's lifecycle, including when it was placed, required, and shipped. Additionally, the table stores shipping information, including the method of shipment and the destination address, which is crucial for logistics and customer service. This data is vital for tracking order fulfillment and analyzing sales performance over time.", "llm_confidence": 90, "table_type": "fact", "primary_keys": ["order_id"], "foreign_keys": [{"name": "fk_orders_customers", "constrained_columns": ["customer_id"], "referred_table": "customers", "referred_columns": ["customer_id"], "label": "customer_id \u2192 customers.customer_id"}, {"name": "fk_orders_employees", "constrained_columns": ["employee_id"], "referred_table": "employees", "referred_columns": ["employee_id"], "label": "employee_id \u2192 employees.employee_id"}, {"name": "fk_orders_shippers", "constrained_columns": ["ship_via"], "referred_table": "shippers", "referred_columns": ["shipper_id"], "label": "ship_via \u2192 shippers.shipper_id"}], "indexes": [], "fk_integrity": [{"fk_name": "fk_orders_customers", "local_col": "customer_id", "ref_table": "customers", "ref_col": "customer_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "fk_orders_employees", "local_col": "employee_id", "ref_table": "employees", "ref_col": "employee_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "fk_orders_shippers", "local_col": "ship_via", "ref_table": "shippers", "ref_col": "shipper_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"order_id": 10248, "customer_id": "VINET", "employee_id": 5, "order_date": "1996-07-04", "required_date": "1996-08-01", "shipped_date": "1996-07-16", "ship_via": 3, "freight": 32.38, "ship_name": "Vins et alcools Chevalier", "ship_address": "59 rue de l'Abbaye", "ship_city": "Reims", "ship_region": null, "ship_postal_code": "51100", "ship_country": "France"}, {"order_id": 10249, "customer_id": "TOMSP", "employee_id": 6, "order_date": "1996-07-05", "required_date": "1996-08-16", "shipped_date": "1996-07-10", "ship_via": 1, "freight": 11.61, "ship_name": "Toms Spezialit\u00e4ten", "ship_address": "Luisenstr. 48", "ship_city": "M\u00fcnster", "ship_region": null, "ship_postal_code": "44087", "ship_country": "Germany"}, {"order_id": 10250, "customer_id": "HANAR", "employee_id": 4, "order_date": "1996-07-08", "required_date": "1996-08-05", "shipped_date": "1996-07-12", "ship_via": 2, "freight": 65.83, "ship_name": "Hanari Carnes", "ship_address": "Rua do Pa\u00e7o, 67", "ship_city": "Rio de Janeiro", "ship_region": "RJ", "ship_postal_code": "05454-876", "ship_country": "Brazil"}, {"order_id": 10251, "customer_id": "VICTE", "employee_id": 3, "order_date": "1996-07-08", "required_date": "1996-08-05", "shipped_date": "1996-07-15", "ship_via": 1, "freight": 41.34, "ship_name": "Victuailles en stock", "ship_address": "2, rue du Commerce", "ship_city": "Lyon", "ship_region": null, "ship_postal_code": "69004", "ship_country": "France"}, {"order_id": 10252, "customer_id": "SUPRD", "employee_id": 4, "order_date": "1996-07-09", "required_date": "1996-08-06", "shipped_date": "1996-07-11", "ship_via": 2, "freight": 51.3, "ship_name": "Supr\u00eames d\u00e9lices", "ship_address": "Boulevard Tirou, 255", "ship_city": "Charleroi", "ship_region": null, "ship_postal_code": "B-6000", "ship_country": "Belgium"}], "columns": [{"name": "order_id", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each order, ranging from 10248 to 11077", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "customer_id", "type": "VARCHAR(5)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "customers.customer_id", "comment": null, "llm_description": "Short code identifying the customer who placed the order, with distinct values like 'SAVEA' and 'ERNSH'", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "employee_id", "type": "SMALLINT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "employees.employee_id", "comment": null, "llm_description": "Identifier for the employee who processed the order, with values ranging from 1 to 9", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "order_date", "type": "DATE", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Date when the order was placed, with 480 distinct dates indicating a wide range of order activity", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": ["temporal"], "naming_issue": null}, {"name": "required_date", "type": "DATE", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Date by which the order is required to be delivered, with 454 distinct dates reflecting customer expectations", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": ["temporal"], "naming_issue": null}, {"name": "shipped_date", "type": "DATE", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Date when the order was actually shipped, with 387 distinct dates showing the shipping timeline", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": ["temporal"], "naming_issue": null}, {"name": "ship_via", "type": "SMALLINT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "shippers.shipper_id", "comment": null, "llm_description": "Identifier for the shipping method used, with distinct values like '1', '2', and '3' indicating different carriers", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "freight", "type": "REAL", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Cost of shipping the order, with a wide range of values from 0.02 to 1007.64 reflecting varying shipment sizes", "llm_confidence": 90, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "ship_name", "type": "VARCHAR(40)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Name of the recipient for the shipment, with 90 distinct names including 'Save-a-lot Markets' and 'Ernst Handel'", "llm_confidence": 90, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "ship_address", "type": "VARCHAR(60)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Street address where the order is to be shipped, with 89 distinct addresses including '187 Suffolk Ln.'", "llm_confidence": 85, "pii_type": "IP Address", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "ship_city", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "City where the order is shipped, with 70 distinct cities such as 'Rio de Janeiro' and 'London'", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "ship_region", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Region or state of the shipping address, often absent, with 19 distinct values like 'SP' and 'RJ'", "llm_confidence": 60, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "ship_postal_code", "type": "VARCHAR(10)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Postal code for the shipping address, with 84 distinct codes including '83720' and '8010'", "llm_confidence": 80, "pii_type": null, "pii_detected": null, "lineage_tags": ["natural_key"], "naming_issue": null}, {"name": "ship_country", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Country where the order is shipped, with 21 distinct countries including 'USA' and 'Germany'", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "products", "schema": null, "row_count": 77, "comment": null, "llm_description": "The `products` table serves as a comprehensive catalog of items available for sale, detailing essential information such as product names, pricing, and inventory levels. Each product is uniquely identified by a `product_id`, and the table includes attributes that indicate the supplier and category of each product, as well as specifics like the quantity per unit and reorder levels. This structure allows businesses to manage their inventory effectively, track stock levels, and make informed purchasing decisions. Additionally, the `discontinued` column indicates whether a product is still available for sale, aiding in inventory management and sales strategy.", "llm_confidence": 90, "table_type": "dimension", "primary_keys": ["product_id"], "foreign_keys": [{"name": "fk_products_categories", "constrained_columns": ["category_id"], "referred_table": "categories", "referred_columns": ["category_id"], "label": "category_id \u2192 categories.category_id"}, {"name": "fk_products_suppliers", "constrained_columns": ["supplier_id"], "referred_table": "suppliers", "referred_columns": ["supplier_id"], "label": "supplier_id \u2192 suppliers.supplier_id"}], "indexes": [], "fk_integrity": [{"fk_name": "fk_products_categories", "local_col": "category_id", "ref_table": "categories", "ref_col": "category_id", "orphan_count": 0, "status": "ok"}, {"fk_name": "fk_products_suppliers", "local_col": "supplier_id", "ref_table": "suppliers", "ref_col": "supplier_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"product_id": 1, "product_name": "Chai", "supplier_id": 8, "category_id": 1, "quantity_per_unit": "10 boxes x 30 bags", "unit_price": 18.0, "units_in_stock": 39, "units_on_order": 0, "reorder_level": 10, "discontinued": 1}, {"product_id": 2, "product_name": "Chang", "supplier_id": 1, "category_id": 1, "quantity_per_unit": "24 - 12 oz bottles", "unit_price": 19.0, "units_in_stock": 17, "units_on_order": 40, "reorder_level": 25, "discontinued": 1}, {"product_id": 3, "product_name": "Aniseed Syrup", "supplier_id": 1, "category_id": 2, "quantity_per_unit": "12 - 550 ml bottles", "unit_price": 10.0, "units_in_stock": 13, "units_on_order": 70, "reorder_level": 25, "discontinued": 0}, {"product_id": 4, "product_name": "Chef Anton's Cajun Seasoning", "supplier_id": 2, "category_id": 2, "quantity_per_unit": "48 - 6 oz jars", "unit_price": 22.0, "units_in_stock": 53, "units_on_order": 0, "reorder_level": 0, "discontinued": 0}, {"product_id": 5, "product_name": "Chef Anton's Gumbo Mix", "supplier_id": 2, "category_id": 2, "quantity_per_unit": "36 boxes", "unit_price": 21.35, "units_in_stock": 0, "units_on_order": 0, "reorder_level": 0, "discontinued": 1}], "columns": [{"name": "product_id", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each product in the inventory", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "product_name", "type": "VARCHAR(40)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Distinct name of the product being sold", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "supplier_id", "type": "SMALLINT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "suppliers.supplier_id", "comment": null, "llm_description": "Identifier linking to the supplier of the product, with 29 possible suppliers", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "category_id", "type": "SMALLINT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "categories.category_id", "comment": null, "llm_description": "Identifier linking to the category of the product, with 8 distinct categories", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "quantity_per_unit", "type": "VARCHAR(20)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Description of the quantity contained in each unit of the product, such as '24 - 12 oz bottles'", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "unit_price", "type": "REAL", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The sale price per unit of the product, ranging from 2.50 to 263.50", "llm_confidence": 82, "pii_type": null, "pii_detected": null, "lineage_tags": ["financial"], "naming_issue": null}, {"name": "units_in_stock", "type": "SMALLINT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Current inventory count of the product available for sale, ranging from 0 to 125", "llm_confidence": 82, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "units_on_order", "type": "SMALLINT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Number of units of the product that are currently on order, with 10 distinct values", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "reorder_level", "type": "SMALLINT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The stock level at which new orders should be placed, with key values like '0', '25', and '15'", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "discontinued", "type": "INTEGER", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Indicator of whether the product is still available for sale (0 for active, 1 for discontinued)", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "region", "schema": null, "row_count": 4, "comment": null, "llm_description": "The \"region\" table serves to categorize and define geographical areas relevant to the business's operations. Each entry includes a unique identifier for the region and a descriptive name that provides context about the area. This information is essential for reporting and analysis, allowing the organization to segment data based on regional performance or characteristics. By maintaining a structured list of regions, the business can enhance its decision-making processes and tailor strategies to specific locations.", "llm_confidence": 90, "table_type": "dimension", "primary_keys": ["region_id"], "foreign_keys": [], "indexes": [], "fk_integrity": [], "sample_data": [{"region_id": 1, "region_description": "Eastern"}, {"region_id": 2, "region_description": "Western"}, {"region_id": 3, "region_description": "Northern"}, {"region_id": 4, "region_description": "Southern"}], "columns": [{"name": "region_id", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each region, with values ranging from 1 to 4, representing distinct geographical areas", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "region_description", "type": "VARCHAR(60)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Descriptive name of each region, which is always unique and provides context about the geographical area", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "shippers", "schema": null, "row_count": 6, "comment": null, "llm_description": "The `shippers` table stores information about companies that provide shipping services for products. Each entry includes a unique identifier for the shipper, the name of the shipping company, and a contact phone number, which may contain personally identifiable information (PII). This table serves as a reference for associating orders with their respective shipping providers, facilitating logistics and communication. It is essential for managing the shipping process effectively within the business operations.", "llm_confidence": 85, "table_type": "lookup", "primary_keys": ["shipper_id"], "foreign_keys": [], "indexes": [], "fk_integrity": [], "sample_data": [{"shipper_id": 1, "company_name": "Speedy Express", "phone": "(503) 555-9831"}, {"shipper_id": 2, "company_name": "United Package", "phone": "(503) 555-3199"}, {"shipper_id": 3, "company_name": "Federal Shipping", "phone": "(503) 555-9931"}, {"shipper_id": 4, "company_name": "Alliance Shippers", "phone": "1-800-222-0451"}, {"shipper_id": 5, "company_name": "UPS", "phone": "1-800-782-7892"}], "columns": [{"name": "shipper_id", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each shipper, ranging from 1 to 6", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "company_name", "type": "VARCHAR(40)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The name of the shipping company, which is unique for each entry", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "phone", "type": "VARCHAR(24)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "The contact phone number for the shipping company, formatted as a phone number and unique for each entry", "llm_confidence": 90, "pii_type": "Phone", "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "suppliers", "schema": null, "row_count": 29, "comment": null, "llm_description": "The suppliers table stores information about vendors that provide products or services to the organization. It includes essential details such as the supplier's name, contact information, and location, which are crucial for managing supplier relationships and facilitating communication. Additionally, the table may contain links to the suppliers' online presence through the homepage column, enhancing the ability to engage with them. The presence of null values in key columns like region and fax suggests potential gaps in the data that may need addressing for comprehensive supplier management.", "llm_confidence": 72, "table_type": "dimension", "primary_keys": ["supplier_id"], "foreign_keys": [], "indexes": [], "fk_integrity": [], "sample_data": [{"supplier_id": 1, "company_name": "Exotic Liquids", "contact_name": "Charlotte Cooper", "contact_title": "Purchasing Manager", "address": "49 Gilbert St.", "city": "London", "region": null, "postal_code": "EC1 4SD", "country": "UK", "phone": "(171) 555-2222", "fax": null, "homepage": null}, {"supplier_id": 2, "company_name": "New Orleans Cajun Delights", "contact_name": "Shelley Burke", "contact_title": "Order Administrator", "address": "P.O. Box 78934", "city": "New Orleans", "region": "LA", "postal_code": "70117", "country": "USA", "phone": "(100) 555-4822", "fax": null, "homepage": "#CAJUN.HTM#"}, {"supplier_id": 3, "company_name": "Grandma Kelly's Homestead", "contact_name": "Regina Murphy", "contact_title": "Sales Representative", "address": "707 Oxford Rd.", "city": "Ann Arbor", "region": "MI", "postal_code": "48104", "country": "USA", "phone": "(313) 555-5735", "fax": "(313) 555-3349", "homepage": null}, {"supplier_id": 4, "company_name": "Tokyo Traders", "contact_name": "Yoshi Nagase", "contact_title": "Marketing Manager", "address": "9-8 Sekimai Musashino-shi", "city": "Tokyo", "region": null, "postal_code": "100", "country": "Japan", "phone": "(03) 3555-5011", "fax": null, "homepage": null}, {"supplier_id": 5, "company_name": "Cooperativa de Quesos 'Las Cabras'", "contact_name": "Antonio del Valle Saavedra", "contact_title": "Export Administrator", "address": "Calle del Rosal 4", "city": "Oviedo", "region": "Asturias", "postal_code": "33007", "country": "Spain", "phone": "(98) 598 76 54", "fax": null, "homepage": null}], "columns": [{"name": "supplier_id", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each supplier, ranging from 1 to 29", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "company_name", "type": "VARCHAR(40)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Name of the company that supplies products or services, always unique", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "contact_name", "type": "VARCHAR(30)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Name of the primary contact person at the supplier, always unique", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "contact_title", "type": "VARCHAR(30)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Job title of the contact person, with distinct roles such as 'Sales Representative' and 'Marketing Manager'", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "address", "type": "VARCHAR(60)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Physical address of the supplier, always unique and considered personally identifiable information (PII)", "llm_confidence": 95, "pii_type": "Address", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "city", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "City where the supplier is located, always unique", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "region", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Geographical region of the supplier, often absent, with distinct values like 'Qu\u00e9bec' and 'LA'", "llm_confidence": 70, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "postal_code", "type": "VARCHAR(10)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Postal code for the supplier's address, always unique and serves as a natural key", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": ["natural_key"], "naming_issue": null}, {"name": "country", "type": "VARCHAR(15)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Country where the supplier operates, with distinct values such as 'USA' and 'Germany'", "llm_confidence": 85, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "phone", "type": "VARCHAR(24)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Contact phone number for the supplier, always unique and considered PII", "llm_confidence": 95, "pii_type": "Phone", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "fax", "type": "VARCHAR(24)", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Fax number for the supplier, often absent, with a limited set of distinct values and considered PII", "llm_confidence": 70, "pii_type": "Phone", "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "homepage", "type": "TEXT", "nullable": true, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Website URL for the supplier, often absent, with a few distinct values indicating online presence", "llm_confidence": 50, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}]}, {"name": "territories", "schema": null, "row_count": 53, "comment": null, "llm_description": "The \"territories\" table stores information about distinct geographical areas within a business's operational framework. Each record includes a unique identifier for the territory, a description that provides context about the area, and a reference to the associated region, which helps in categorizing the territories into broader geographical segments. This structure supports business functions such as sales management, regional planning, and performance analysis by allowing the organization to track and analyze activities within specific territories. Overall, the table plays a crucial role in understanding market distribution and resource allocation across different areas.", "llm_confidence": 85, "table_type": "unknown", "primary_keys": ["territory_id"], "foreign_keys": [{"name": "fk_territories_region", "constrained_columns": ["region_id"], "referred_table": "region", "referred_columns": ["region_id"], "label": "region_id \u2192 region.region_id"}], "indexes": [], "fk_integrity": [{"fk_name": "fk_territories_region", "local_col": "region_id", "ref_table": "region", "ref_col": "region_id", "orphan_count": 0, "status": "ok"}], "sample_data": [{"territory_id": "01581", "territory_description": "Westboro", "region_id": 1}, {"territory_id": "01730", "territory_description": "Bedford", "region_id": 1}, {"territory_id": "01833", "territory_description": "Georgetow", "region_id": 1}, {"territory_id": "02116", "territory_description": "Boston", "region_id": 1}, {"territory_id": "02139", "territory_description": "Cambridge", "region_id": 1}], "columns": [{"name": "territory_id", "type": "VARCHAR(20)", "nullable": false, "default": null, "is_primary_key": true, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Unique identifier for each territory, represented by a 5-character code", "llm_confidence": 97, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}, {"name": "territory_description", "type": "VARCHAR(60)", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": false, "foreign_key_to": null, "comment": null, "llm_description": "Descriptive name of the territory, with examples including 'New York' and 'Denver'", "llm_confidence": 95, "pii_type": null, "pii_detected": null, "lineage_tags": [], "naming_issue": null}, {"name": "region_id", "type": "SMALLINT", "nullable": false, "default": null, "is_primary_key": false, "is_foreign_key": true, "foreign_key_to": "region.region_id", "comment": null, "llm_description": "Identifier linking to the region entity, with values ranging from 1 to 4 representing distinct regions", "llm_confidence": 90, "pii_type": null, "pii_detected": null, "lineage_tags": ["surrogate_key"], "naming_issue": null}]}], "type_colors": {"fact": "#7c3aed", "dimension": "#2563eb", "lookup": "#059669", "audit": "#d97706", "junction": "#0891b2", "unknown": "#4f46e5"}, "type_labels": {"fact": "Fact", "dimension": "Dimension", "lookup": "Lookup", "audit": "Audit", "junction": "Junction", "unknown": ""}};
+const tables = RAW.tables;
+let activeIdx = 0;
+let filteredTables = [...tables];
+let currentTypeFilter = '';
+
+// ── Theme ───────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  html.classList.toggle('dark', !isDark);
+  html.classList.toggle('light', isDark);
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('dbdocs_theme', isDark ? 'light' : 'dark');
+}
+(function() {
+  const t = localStorage.getItem('dbdocs_theme') || 'dark';
+  document.documentElement.classList.toggle('dark', t==='dark');
+  document.documentElement.classList.toggle('light', t==='light');
+  if (t==='light') document.getElementById('themeBtn').textContent = '☀️';
+})();
+
+// ── Type color map ───────────────────────────────────────────────────────────
+const TYPE_COLORS = RAW.type_colors || {};
+const TYPE_LABELS = RAW.type_labels || {};
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const list = document.getElementById('tableList');
+  const cnt = document.getElementById('tableCount');
+  list.innerHTML = '';
+  filteredTables.forEach((t, i) => {
+    const origIdx = tables.indexOf(t);
+    const color = TYPE_COLORS[t.table_type] || '#4f46e5';
+    const hasPii = t.columns.some(c => c.pii_type || c.pii_detected);
+    const hasFkViol = (t.fk_integrity||[]).some(f => f.status==='violation');
+    const div = document.createElement('div');
+    div.className = 'px-2 py-2 rounded cursor-pointer border-l-2 border-transparent text-sm sb-hover transition-colors duration-100';
+    div.id = 'sb_' + origIdx;
+    div.innerHTML = `
+      <div class="flex items-center justify-between">
+        <span class="font-medium truncate" style="max-width:160px" title="${t.name}">${t.name}</span>
+        <div class="flex gap-1 items-center">
+          ${hasPii ? '<span class="text-xs text-red-400" title="PII columns">🔒</span>' : ''}
+          ${hasFkViol ? '<span class="text-xs text-orange-400" title="FK violations">⚠</span>' : ''}
+        </div>
+      </div>
+      <div class="flex items-center gap-1 mt-0.5">
+        <span class="text-xs text-gray-500">${(t.row_count||0).toLocaleString()} rows · ${t.column_count} cols</span>
+        ${t.table_type && t.table_type !== 'unknown' ? `<span class="type-badge" style="background:${color}22;color:${color}">${TYPE_LABELS[t.table_type]||t.table_type}</span>` : ''}
+      </div>`;
+    div.onclick = () => scrollToTable(origIdx);
+    list.appendChild(div);
+  });
+  cnt.textContent = `${filteredTables.length} of ${tables.length} tables`;
+}
+
+function filterType(type) {
+  currentTypeFilter = type;
+  document.querySelectorAll('.type-filter-btn').forEach(b => {
+    const active = b.dataset.type === type;
+    b.className = `type-filter-btn text-xs px-2 py-0.5 rounded ${active ? 'bg-purple-700 text-white' : 'btn-s'}`;
+  });
+  applyFilters();
+}
+
+function applyFilters() {
+  const q = document.getElementById('sidebarSearch').value.toLowerCase();
+  filteredTables = tables.filter(t => {
+    const matchQ = !q || t.name.toLowerCase().includes(q);
+    const matchType = !currentTypeFilter || t.table_type === currentTypeFilter;
+    return matchQ && matchType;
+  });
+  renderSidebar();
+}
+
+document.getElementById('sidebarSearch').addEventListener('input', applyFilters);
+
+// Column search
+document.getElementById('colSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.col-row').forEach(row => {
+    row.style.display = !q || row.dataset.name.toLowerCase().includes(q) || row.dataset.type.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+// ── Table cards ──────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Confidence badge: emoji + colour-coded pill  🟢≥80  🟡≥60  🟠≥40  🔴<40
+function confBadge(score) {
+  if (score == null) return '';
+  const n = Math.round(score);
+  let emoji, bg, fg;
+  if      (n >= 80) { emoji = '🟢'; bg = '#14532d'; fg = '#4ade80'; }
+  else if (n >= 60) { emoji = '🟡'; bg = '#1c3a0a'; fg = '#a3e635'; }
+  else if (n >= 40) { emoji = '🟠'; bg = '#451a03'; fg = '#fb923c'; }
+  else              { emoji = '🔴'; bg = '#450a0a'; fg = '#f87171'; }
+  return `<span style="flex-shrink:0;display:inline-flex;align-items:center;padding:1px 5px;border-radius:9999px;font-size:12px;background:${bg};color:${fg}" title="LLM confidence: ${n}/100">${emoji}</span>`;
+}
+
+function renderTables() {
+  const container = document.getElementById('tablesContainer');
+  container.innerHTML = '';
+  tables.forEach((t, idx) => {
+    const color = TYPE_COLORS[t.table_type] || '#4f46e5';
+    const hasPii = t.columns.some(c => c.pii_type || c.pii_detected);
+    const fkViols = (t.fk_integrity||[]).filter(f => f.status==='violation');
+    const fkErrors = (t.fk_integrity||[]).filter(f => f.status==='error');
+
+    const card = document.createElement('div');
+    card.className = 'card rounded-xl border overflow-hidden';
+    card.id = 'table_' + idx;
+
+    // Header
+    let headerHtml = `
+      <div class="px-5 py-4 border-b bdr flex items-start justify-between" style="background:linear-gradient(135deg,${color}22,transparent)">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-lg font-bold font-mono">${escHtml(t.name)}</h2>
+            ${t.schema ? `<span class="text-xs text-gray-500">${escHtml(t.schema)}</span>` : ''}
+            ${t.table_type && t.table_type!=='unknown' ? `<span class="type-badge" style="background:${color}33;color:${color}">${TYPE_LABELS[t.table_type]||t.table_type}</span>` : ''}
+            ${hasPii ? '<span class="pii-badge">🔒 PII</span>' : ''}
+            ${fkViols.length ? `<span class="warn-badge">⚠ ${fkViols.length} FK violation${fkViols.length>1?'s':''}</span>` : ''}
+          </div>
+          <div class="flex gap-3 mt-1 text-xs text-gray-400">
+            <span>${(t.row_count||0).toLocaleString()} rows</span>
+            <span>${t.columns.length} columns</span>
+            ${t.comment ? `<span class="italic">${escHtml(t.comment)}</span>` : ''}
+          </div>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <button onclick="copyColumns(${idx})" class="tooltip text-xs px-2 py-1 rounded btn-s" data-tip="Copy column list">📋 Copy</button>
+          <button onclick="toggleSql(${idx})" class="tooltip text-xs px-2 py-1 rounded btn-s" data-tip="SQL Snippets">⚡ SQL</button>
+        </div>
+      </div>`;
+
+    // LLM Description
+    let descHtml = '';
+    if (t.llm_description) {
+      const tConf = t.llm_confidence != null ? confBadge(t.llm_confidence) : '';
+      descHtml = `<div class="px-5 py-3 border-b bdr llm-d text-sm italic border-l-4 border-l-purple-500 flex items-start gap-3">
+        <span class="flex-1">${escHtml(t.llm_description)}</span>
+        ${tConf}
+      </div>`;
+    }
+
+    // SQL Snippet panel
+    const createSql = `CREATE TABLE ${t.name} (\n${t.columns.map(c => `  ${c.name} ${c.type}${c.nullable===false?' NOT NULL':''}`).join(',\n')}\n);`;
+    const selectSql = `SELECT\n  ${t.columns.slice(0,10).map(c=>c.name).join(',\n  ')}\nFROM ${t.name}\nLIMIT 100;`;
+    const sqlHtml = `
+      <div id="sql_${idx}" class="hidden px-5 py-4 border-b bdr code-block">
+        <div class="flex gap-2 mb-2">
+          <button onclick="showSnippet(${idx},'create')" class="snippet-tab text-xs px-2 py-1 rounded bg-purple-700 text-white" data-tab="create">CREATE TABLE</button>
+          <button onclick="showSnippet(${idx},'select')" class="snippet-tab text-xs px-2 py-1 rounded btn-s" data-tab="select">SELECT</button>
+          <button onclick="copySnippet(${idx})" class="ml-auto text-xs px-2 py-1 rounded btn-s">Copy SQL</button>
+        </div>
+        <pre id="snippet_${idx}" class="text-xs font-mono text-green-300 overflow-x-auto whitespace-pre-wrap">${escHtml(createSql)}</pre>
+      </div>`;
+
+    // Columns table
+    let colRows = '';
+    t.columns.forEach((c, ci) => {
+      const tags = (c.lineage_tags||[]).map(tag => `<span class="lineage-tag">${escHtml(tag)}</span>`).join(' ');
+      const namingIssue = c.naming_issue ? `<span class="tooltip warn-badge" data-tip="${escHtml(c.naming_issue)}">⚠</span>` : '';
+      const piiTag = (c.pii_type||c.pii_detected) ? `<span class="pii-badge">${escHtml(c.pii_type||c.pii_detected)}</span>` : '';
+      colRows += `
+        <tr class="col-row tr-hover border-b bdr" data-name="${escHtml(c.name)}" data-type="${escHtml(c.type)}">
+          <td class="px-3 py-2 text-center text-xs text-gray-500">${ci+1}</td>
+          <td class="px-3 py-2">
+            <div class="flex items-center gap-1 flex-wrap">
+              <span class="font-mono text-sm font-medium">${escHtml(c.name)}</span>
+              ${namingIssue}
+            </div>
+            <div class="flex flex-wrap gap-1 mt-0.5">${tags}</div>
+          </td>
+          <td class="px-3 py-2 font-mono text-xs text-blue-300">${escHtml(c.type)}</td>
+          <td class="px-3 py-2 text-center text-xs">${c.nullable===false?'<span class="text-red-400">✗</span>':'<span class="text-gray-500">✓</span>'}</td>
+          <td class="px-3 py-2">
+            <div class="flex flex-wrap gap-1">
+              ${c.is_primary_key?'<span class="pk-badge">PK</span>':''}
+              ${c.is_foreign_key?`<span class="fk-badge tooltip" data-tip="→ ${escHtml(c.foreign_key_to||'')}">FK</span>`:''}
+              ${c.nullable===false?'<span class="nn-badge">NN</span>':''}
+              ${piiTag}
+            </div>
+          </td>
+          <td class="px-3 py-2 text-xs text-gray-400 font-mono">${c.default!=null?escHtml(String(c.default)):''}</td>
+          <td class="px-3 py-2 text-xs text-gray-400">
+            <div class="flex items-start gap-1.5">
+              <span class="flex-1">${c.llm_description?escHtml(c.llm_description):(c.comment?`<span class="text-gray-500">${escHtml(c.comment)}</span>`:'')}</span>
+              ${c.llm_confidence!=null ? confBadge(c.llm_confidence) : ''}
+            </div>
+          </td>
+        </tr>`;
+    });
+
+    const colTable = `
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="th">
+              <th class="px-3 py-2 text-left text-xs font-medium w-8">#</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Column</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Type</th>
+              <th class="px-3 py-2 text-center text-xs font-medium">Null</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Flags</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Default</th>
+              <th class="px-3 py-2 text-left text-xs font-medium">Description</th>
+            </tr>
+          </thead>
+          <tbody>${colRows}</tbody>
+        </table>
+      </div>`;
+
+    // Collapsible sections
+    let extraSections = '';
+
+    // FK Integrity
+    if ((t.fk_integrity||[]).length > 0) {
+      const rows = t.fk_integrity.map(f => {
+        const statusColor = f.status==='ok' ? 'text-green-400' : f.status==='violation' ? 'text-red-400' : 'text-yellow-400';
+        return `<tr class="border-b bdr">
+          <td class="px-3 py-1.5 text-xs font-mono">${escHtml(f.local_col)}</td>
+          <td class="px-3 py-1.5 text-xs font-mono">${escHtml(f.ref_table)}.${escHtml(f.ref_col)}</td>
+          <td class="px-3 py-1.5 text-xs text-right ${statusColor}">${f.orphan_count >= 0 ? f.orphan_count.toLocaleString() : 'err'}</td>
+          <td class="px-3 py-1.5 text-xs ${statusColor} font-medium">${f.status}</td>
+        </tr>`;
+      }).join('');
+      extraSections += `
+        <div class="border-t bdr">
+          <button onclick="toggleSection(this)" class="w-full px-5 py-2.5 text-left text-sm font-medium flex items-center justify-between sect-hover transition-colors">
+            <span>🔗 FK Integrity (${t.fk_integrity.length})</span><span class="chevron text-gray-500">▶</span>
+          </button>
+          <div class="section-content hidden">
+            <table class="w-full text-sm mb-2">
+              <thead><tr class="th"><th class="px-3 py-1.5 text-xs font-medium">Local Col</th><th class="px-3 py-1.5 text-xs font-medium">References</th><th class="px-3 py-1.5 text-xs font-medium text-right">Orphans</th><th class="px-3 py-1.5 text-xs font-medium">Status</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    // Indexes
+    if ((t.indexes||[]).length > 0) {
+      const rows = t.indexes.map(ix => `<tr class="border-b bdr">
+        <td class="px-3 py-1.5 text-xs font-mono">${escHtml(ix.name||'')}</td>
+        <td class="px-3 py-1.5 text-xs">${(ix.columns||[]).join(', ')}</td>
+        <td class="px-3 py-1.5 text-xs text-center">${ix.unique?'<span class="idx-badge">UNIQUE</span>':''}</td>
+      </tr>`).join('');
+      extraSections += `
+        <div class="border-t bdr">
+          <button onclick="toggleSection(this)" class="w-full px-5 py-2.5 text-left text-sm font-medium flex items-center justify-between sect-hover transition-colors">
+            <span>📑 Indexes (${t.indexes.length})</span><span class="chevron text-gray-500">▶</span>
+          </button>
+          <div class="section-content hidden">
+            <table class="w-full text-sm mb-2">
+              <thead><tr class="th"><th class="px-3 py-1.5 text-xs font-medium">Name</th><th class="px-3 py-1.5 text-xs font-medium">Columns</th><th class="px-3 py-1.5 text-xs font-medium text-center">Unique</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    // Sample data
+    if (t.sample_data && t.sample_data.length > 0) {
+      const cols = Object.keys(t.sample_data[0]);
+      const headers = cols.map(c => `<th class="px-3 py-1.5 text-xs font-medium font-mono">${escHtml(c)}</th>`).join('');
+      const dataRows = t.sample_data.slice(0,5).map(row => 
+        `<tr class="border-b bdr">${cols.map(c => `<td class="px-3 py-1.5 text-xs font-mono text-gray-400">${escHtml(String(row[c]??''))}</td>`).join('')}</tr>`
+      ).join('');
+      extraSections += `
+        <div class="border-t bdr">
+          <button onclick="toggleSection(this)" class="w-full px-5 py-2.5 text-left text-sm font-medium flex items-center justify-between sect-hover transition-colors">
+            <span>🗂 Sample Data (${t.sample_data.length} rows)</span><span class="chevron text-gray-500">▶</span>
+          </button>
+          <div class="section-content hidden overflow-x-auto">
+            <table class="w-full text-sm mb-2">
+              <thead><tr class="th">${headers}</tr></thead>
+              <tbody>${dataRows}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    card.innerHTML = headerHtml + descHtml + sqlHtml + colTable + extraSections;
+    container.appendChild(card);
+  });
+}
+
+// ── Interactions ─────────────────────────────────────────────────────────────
+function toggleSection(btn) {
+  const content = btn.nextElementSibling;
+  const chevron = btn.querySelector('.chevron');
+  const hidden = content.classList.toggle('hidden');
+  chevron.textContent = hidden ? '▶' : '▼';
+}
+
+function toggleSql(idx) {
+  const panel = document.getElementById('sql_' + idx);
+  panel.classList.toggle('hidden');
+}
+
+const sqlSnippets = {};
+function showSnippet(idx, tab) {
+  const t = tables[idx];
+  const pre = document.getElementById('snippet_' + idx);
+  const tabs = document.querySelectorAll(`#sql_${idx} .snippet-tab`);
+  tabs.forEach(b => {
+    const active = b.dataset.tab === tab;
+    b.className = `snippet-tab text-xs px-2 py-1 rounded ${active ? 'bg-purple-700 text-white' : 'btn-s'}`;
+  });
+  if (tab === 'create') {
+    pre.textContent = `CREATE TABLE ${t.name} (\n${t.columns.map(c => `  ${c.name} ${c.type}${c.nullable===false?' NOT NULL':''}`).join(',\n')}\n);`;
+  } else {
+    pre.textContent = `SELECT\n  ${t.columns.slice(0,10).map(c=>c.name).join(',\n  ')}\nFROM ${t.name}\nLIMIT 100;`;
+  }
+}
+
+function copySnippet(idx) {
+  const text = document.getElementById('snippet_' + idx).textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('SQL copied!'));
+}
+
+function copyColumns(idx) {
+  const t = tables[idx];
+  const text = t.columns.map(c => c.name).join('\n');
+  navigator.clipboard.writeText(text).then(() => showToast('Columns copied!'));
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#7c3aed;color:white;padding:8px 16px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:opacity 0.2s;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+}
+
+function printPage() {
+  window.print();
+}
+
+// ── Active table tracking via IntersectionObserver ───────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = parseInt(e.target.id.split('_')[1]);
+      document.querySelectorAll('#tableList > div').forEach(el => el.classList.remove('active-table'));
+      const sb = document.getElementById('sb_' + idx);
+      if (sb) { sb.classList.add('active-table'); sb.scrollIntoView({ block:'nearest' }); }
+      activeIdx = filteredTables.indexOf(tables[idx]);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '-10% 0px -80% 0px' });
+
+function scrollToTable(idx) {
+  const el = document.getElementById('table_' + idx);
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── Keyboard shortcuts ───────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const si = document.getElementById('sidebarSearch');
+  const ci = document.getElementById('colSearch');
+  if (document.activeElement === si || document.activeElement === ci) {
+    if (e.key === 'Escape') { si.value=''; ci.value=''; si.blur(); ci.blur(); applyFilters(); document.querySelectorAll('.col-row').forEach(r => r.style.display=''); }
+    return;
+  }
+  if (e.key === '/') { e.preventDefault(); si.focus(); si.select(); }
+  else if (e.key === 'j') {
+    const next = Math.min(activeIdx+1, filteredTables.length-1);
+    scrollToTable(tables.indexOf(filteredTables[next]));
+  } else if (e.key === 'k') {
+    const prev = Math.max(activeIdx-1, 0);
+    scrollToTable(tables.indexOf(filteredTables[prev]));
+  }
+});
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+renderTables();
+renderSidebar();
+tables.forEach((t, i) => {
+  const el = document.getElementById('table_' + i);
+  if (el) observer.observe(el);
+});
+</script>
+</body>
+</html>
